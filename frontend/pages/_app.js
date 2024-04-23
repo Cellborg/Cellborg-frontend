@@ -1,0 +1,20 @@
+import {SessionProvider} from 'next-auth/react'
+import { ProjectProvider } from '../components/utils/projectContext';
+import { SocketProvider } from '../components/utils/socketContext';
+import Head from 'next/head';
+import '../styles/globals.css';
+
+export default function App({ Component, pageProps, session }) {
+  return (
+    <SessionProvider session={session}>
+      <Head>
+        <title>Cellborg</title>
+      </Head>
+      <SocketProvider>
+        <ProjectProvider>
+          <Component {...pageProps} />
+        </ProjectProvider>
+      </SocketProvider>
+    </SessionProvider>
+  )
+}
