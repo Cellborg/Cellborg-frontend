@@ -62,7 +62,7 @@ jobs:
         REPOSITORY: cellborg-beta-frontend
         IMAGE_TAG:  ${{ github.event.inputs.environ == 'beta' && github.event.inputs.environ || 'newest' }}
       run: |
-        cd api
+        cd frontend
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
     
