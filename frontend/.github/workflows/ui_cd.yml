@@ -1,0 +1,47 @@
+name: Cellborg Frontend CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'image_name:tag'
+        required: true
+        default: 'cellborg-beta-frontend:newest'
+      environment:
+        description: 'environment to deploy'
+        required: true
+        default: 'beta'
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  #   types: [ opened, reopened, edited ]
+    
+jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Image: $IMAGE"
+          echo "Environment: $ENVIRONMENT"
+        env:
+          IMAGE: ${{ inputs.image }}
+          ENVIRONMENT: ${{ inputs.environment }}
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: "us-west-2"
+        
+    - name: aws cli test
+      run: |
+        echo $image, $environment
+        aws ecs update-service --cluster Cellborg-beta-Frontend-Cluster --service Cellborg-beta-Frontend --force-new-deployment
+      env:
+        image: '${{ github.event.inputs.image }}'
+        environment: '${{ github.event.inputs.environment }}'
+

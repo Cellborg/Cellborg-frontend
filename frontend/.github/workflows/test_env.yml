@@ -1,0 +1,24 @@
+name: Cellborg test env
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'image_name:tag'
+        required: true
+        default: 'cellborg-beta-frontend:newest'
+      environment:
+        description: 'environment to deploy'
+        required: true
+        default: 'beta'
+  
+jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Image: $IMAGE"
+          echo "Environment: $ENVIRONMENT"
+        env:
+          IMAGE: ${{ inputs.image }}
+          ENVIRONMENT: ${{ inputs.environment }}
