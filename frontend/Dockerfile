@@ -13,6 +13,7 @@ RUN npm run build-beta
 FROM node:20.4.0-alpine as runner
 
 WORKDIR /app
+ENV NODE_ENV production
 ENV NEXT_PUBLIC_DEPLOY_ENV beta
 
 # It's important to copy the entire .next directory and node_modules
