@@ -6,7 +6,6 @@ RUN apk add --no-cache build-base python3
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-# Note: 'sharp' is included in the package.json, so no need to install it separately
 COPY . .
 RUN npm run build-beta
 
