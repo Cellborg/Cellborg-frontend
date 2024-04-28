@@ -17,8 +17,8 @@ const nextConfig = {
   reactStrictMode: true,
   env: {
     // pass in NEXTAUTH_URL env. var when deploying to beta/prod
-    NEXT_PUBLIC_NEXTAUTH_SECRET: "gBsuHo9HV6D4zrF+HtLBQ1C8n9W7h37W5beOuDXBw0A=",
-    NEXT_PUBLIC_NEXTAUTH_URL: "https://beta.cellborg.bio"
+    NEXTAUTH_SECRET: "gBsuHo9HV6D4zrF+HtLBQ1C8n9W7h37W5beOuDXBw0A=",
+    NEXTAUTH_URL: "https://beta.cellborg.bio"
 
   },
   images: {
