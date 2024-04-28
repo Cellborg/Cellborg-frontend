@@ -26,6 +26,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 EXPOSE 3000
 ENV PORT 3000
 ENV NEXTAUTH_URL=https://beta.cellborg.bio
-ENV NEXTAUTH_SECRET=gBsuHo9HV6D4zrF+HtLBQ1C8n9W7h37W5beOuDXBw0A=
+ENV NEXT_PUBLIC_NEXTAUTH_SECRET=gBsuHo9HV6D4zrF+HtLBQ1C8n9W7h37W5beOuDXBw0A=
 
 CMD ["node", "server.js"]
