@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { getSession } from 'next-auth/react';
 import {checkTaskStatusURL} from '../constants.js';
 import {MutatingDots} from 'react-loader-spinner'; 
 import io from 'socket.io-client';
@@ -53,7 +52,7 @@ const Loading = ({data: token}) => {
     return () => {
         socket.disconnect();
     };
-}, [projects, selectedProject, router, setProjects, setSelectedProject]);
+}, [projects, selectedProject, router, setProjects, setSelectedProject, name]);
 
   useEffect(() => {
     //move to the api beginqualitycontril endpoint function itself
