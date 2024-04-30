@@ -10,7 +10,7 @@ import cookie from "cookie";
 import { get } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
 import { GoReport } from "react-icons/go";
-import {SESSION_COOKIE} from '../../constants'
+import {SESSION_COOKIE} from '../constants'
 
 const Loading = ({data: token}) => {
   console.log("token:", token);

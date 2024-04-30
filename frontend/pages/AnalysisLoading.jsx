@@ -5,7 +5,7 @@ import SocketComponent from '../components/SocketComponent';
 import {MutatingDots} from 'react-loader-spinner';
 import { GoReport } from "react-icons/go";
 import BugReportForm from '../components/BugReportForm';
-import {SESSION_COOKIE} from '../../constants'
+import {SESSION_COOKIE} from '../constants'
 
 const AnalysisLoading = ({data: token}) => {
     const pageRouter = useRouter();
