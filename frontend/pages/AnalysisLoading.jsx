@@ -54,7 +54,7 @@ export async function getServerSideProps(context) {
     let token = "";
     try {
       const session_cookie = cookie.parse(context.req.headers.cookie);
-      token = session_cookie['next-auth.session-token'];
+      token = session_cookie[`${SESSION_COOKIE}`];
     }
     catch (err) {
       console.log("error getting session cookie");
