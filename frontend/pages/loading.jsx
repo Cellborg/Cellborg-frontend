@@ -67,7 +67,7 @@ const Loading = ({data: token}) => {
             body: JSON.stringify({taskArn: task})
         });
         const data = await response.json();
-
+        console.log('data is here: ',data)
         if (data.ready === true) { 
             setIsLoading(false);
             console.log('YOU ARE LOOKING FOR THIS', selectedProject.user, selectedProject.project_id, dataset, min, max, mt);
