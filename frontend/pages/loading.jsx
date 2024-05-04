@@ -82,8 +82,9 @@ const Loading = ({data: token}) => {
         console.error("Error fetching task status:", error);
       }
     };
-
+    console.log("loading variable: ",isLoading)
     if (isLoading) {
+
       checkTaskStatus();
     }
   }, [isLoading, router, dataset, task, max, min, mt, selectedProject.project_id, selectedProject.user, token]);
