@@ -86,6 +86,7 @@ const Loading = ({data: token}) => {
     };
 
     if (isLoading) {
+      
       checkTaskStatus();
     }
   }, [isLoading, router, dataset, task, max, min, mt, selectedProject.project_id, selectedProject.user, token]);
