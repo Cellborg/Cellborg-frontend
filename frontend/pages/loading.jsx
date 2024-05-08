@@ -59,6 +59,7 @@ const Loading = ({data: token}) => {
     //move to the api beginqualitycontril endpoint function itself
     const checkTaskStatus = async () => {
       try {
+        console.log("======++++ about to send post request");
         const response = await fetch(checkTaskStatusURL, {
             method: 'POST',
             headers: {
@@ -68,7 +69,6 @@ const Loading = ({data: token}) => {
             body: JSON.stringify({taskArn: task})
         });
         const data = await response.json();
-        console.log('data is here: ',data)
         if (data.ready === true) { 
             setIsLoading(false);
             console.log('YOU ARE LOOKING FOR THIS', selectedProject.user, selectedProject.project_id, dataset, min, max, mt);
@@ -87,7 +87,6 @@ const Loading = ({data: token}) => {
 
     console.log("loading variable: ",isLoading)
     if (isLoading) {
-
       checkTaskStatus();
     }
   }, [isLoading, router, dataset, task, max, min, mt, selectedProject.project_id, selectedProject.user, token]);
