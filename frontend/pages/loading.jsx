@@ -55,6 +55,7 @@ const Loading = ({data: token}) => {
 }, [projects, selectedProject, router, setProjects, setSelectedProject, name]);
 
   useEffect(() => {
+  
     //move to the api beginqualitycontril endpoint function itself
     const checkTaskStatus = async () => {
       try {
@@ -75,13 +76,15 @@ const Loading = ({data: token}) => {
             const response = await performQualityControl(selectedProject.user, selectedProject.project_id, dataset, Number(min), Number(max), Number(mt), token);
             // performQualityControl endpoint 
             console.log('Response for perform quality control is:', response);
-        } else {       
-          setTimeout(checkTaskStatus, 5000);  // Re-check every 5 seconds
+        }
+        else if(data.ready === false) {
+          setTimeout(checkTaskStatus, 5000); //check task status again after 5 seconds
         }
       } catch (error) {
         console.error("Error fetching task status:", error);
       }
     };
+
     console.log("loading variable: ",isLoading)
     if (isLoading) {
 
