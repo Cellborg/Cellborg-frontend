@@ -42,6 +42,7 @@ const Login = () => {
                 //pageRouter.push("/Login")
             } else {
                 set('cachedProjects', [])
+                set('selectedProject', null)
                 pageRouter.push('/dashboard');
             }
         })

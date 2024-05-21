@@ -13,11 +13,7 @@ import { GoReport } from "react-icons/go";
 import BugReportForm from '../components/BugReportForm';
 
 const Dashboard = ({data: session, token}) => {
-    const userEmail = session.user.email;
     const userId=session.user.user_id
-    //console.log(session.user,'SESSION USER HERE')
-    //console.log(userEmail);
-    //console.log("token:", token);
 
     const { setProjects, selectedProject, setSelectedProject, setUser, setUserData } = useProjectContext();
     const [editMode, setEditMode] = useState(false);
@@ -27,7 +23,7 @@ const Dashboard = ({data: session, token}) => {
 
     useEffect(() => {
       setUser(userId); 
-      console.log('user ID:', userId)
+      setSelectedProject(null)
     }, [userId, setUser])
 
     useEffect(() => {

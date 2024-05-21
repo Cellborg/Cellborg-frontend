@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { get, set, update } from 'idb-keyval';
+import { get, set} from 'idb-keyval';
 
 const ProjectContext = createContext();
 
