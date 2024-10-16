@@ -9,23 +9,39 @@ import { AnalysisRun } from './AnalysisRun';
 import {datasetUploadBucket} from '../constants.js';
 import dynamic from 'next/dynamic';
 import { get, set, update } from 'idb-keyval';
-
+import {findSpecies} from './FindSpecies.js';
 const DatasetFolder = dynamic(() => import('../components/DatasetFolder'), {
     ssr: false,
   });
 
-export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeletedProject,deletedProject, handleDelete, exitDeleted, token}) => {
+export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeletedProject,deletedProject, token}) => {
+    //used to route pages
     const pageRouter = useRouter();
+    /**
+     * keeps track of...
+     * isDataLoading/setIsDataLoading - loading screen state
+     * editedProject/setEditedProject - edited project state for new projects and current ones (also think edit project screen)
+     * uploadedFolders/setUploadedFolders - uploaded files for edited project/new ones
+     * selectedDatasets/setSelectedDatasets - selected datasets so we upload files to correct datasets
+     */
     const [isDataLoading,setIsDataLoading]=useState(false);
     const [editedProject, setEditedProject] = useState({});
     const [uploadedFolders, setUploadedFolders] = useState([]);
     const [selectedDatasets, setSelectedDatasets] = useState([]);
-    const [wrongName,setWrongName]=useState(false);
-    const { projects, setProjects, user, selectedProject, setSelectedProject, setAnalysisId } = useProjectContext();
-    console.log(selectedProject )
+    const [species, setSpecies] = useState("No Species");
+    const { setProjects, user, selectedProject, setSelectedProject, setAnalysisId } = useProjectContext();
 
+    /** 
+     * checks for valid file structure
+     *      -file names
+     *      -# of files
+     * @param {Object} files 
+     * @returns {Boolean}
+    */
     function validFiles(files) {
+        //creates array from files
         const selectedFolder = Array.from(files).map(file => (file.name));
+        //impliments above checks
         if (selectedFolder.length < 3) { return false; }
         if (selectedFolder.indexOf("features.tsv.gz") > -1 &&
             selectedFolder.indexOf("barcodes.tsv.gz") > -1 && 
@@ -34,14 +50,23 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             }
         return false;
     }
+
+    /**
+     * handles folder upload
+     * @param {FileList} e 
+     * @returns 
+     */
     const handleFolderUpload = async (e) => {
         const files = e.target.files;
         let folderName;
+        //checks if folder is valid
         if (!validFiles(files)){
             console.log("Folder structure was incorrect. Try again");
             return;
         }
+        //iter through folder files
         for (let i = 0; i < files.length; i++) {
+            //make sure file is in folder
             if (files[i].webkitRelativePath.indexOf('/') > -1) {
                 // Get the folder name
                 folderName = files[i].webkitRelativePath.split('/')[0];
@@ -49,36 +74,62 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             }        
         }
         console.log("files: ", files)
+        //add files to selected datasets
         setSelectedDatasets([...selectedDatasets, files]);
+        //add folder to uploaded folders
         setUploadedFolders([...uploadedFolders, {name: folderName, status: "pending"}]);
+        //if editing project that was already created...
         if (editedProject.datasets) {
             setEditedProject({ ...editedProject, datasets: [...editedProject.datasets, {name: folderName, nickname:folderName, status: "pending"}] });
-        } else {
+        } else { // else add datasets to new project
             setEditedProject({ ...editedProject, datasets: [{name: folderName, nickname:folderName, status: "pending"}] });
         }
       };
+    
+      /**
+       * @param {}
+       * @returns 
+       * set deleted project
+       * update delete-mode to true so modal shows up on screen
+       * USE-CASE: user clicks delete on existing project
+       */
     const saveDeleted = async () =>{
         await setDeletedProject(selectedProject)
         console.log('deleted project val',deletedProject)
         setDeleteMode(true)
-
     }
+
+    /**
+     * @param {}
+     * @returns
+     * edit-mode to true
+     * edited project to selected project
+     * USE-CASE: user clicks edit on existing project 
+     */
     const handleEdit = () => {
         setEditMode(true);
         setEditedProject(selectedProject);
     };
 
+    /**
+     * @param {}
+     * @returns
+     * begins analysis run
+     * USE-CASE: user clicks Run on existing project
+     */
     async function handleRun() {
         try {
+            //generate analysis-ID
             const analysisId =  await newAnalysisId(token);
             console.log("analysis id:", analysisId);
             setAnalysisId(analysisId);
 
-            console.log(analysisId);
-            const datasetNames = selectedProject.datasets.map(dataset => dataset.dataset_id);
-            console.log("Datasets: ", datasetNames);
+            //retrieves dataset-ID's
+            const datasetIDs = selectedProject.datasets.map(dataset => dataset.dataset_id);
+            console.log("Datasets: ", datasetIDs);
+            //push user to analysis loading page and being analysis
             pageRouter.push("/AnalysisLoading"); 
-            const res = await beginAnalysis(selectedProject.user, selectedProject.project_id, analysisId, datasetNames, token); 
+            const res = await beginAnalysis(selectedProject.user, selectedProject.project_id, analysisId, datasetIDs, token); 
             console.log(res);
             if (res) {
                 console.log(`Beginning analysis ${analysisId} for project ${selectedProject.name}`);
@@ -89,7 +140,11 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         }
 
     }
-
+    /**
+     * @param {}
+     * @returns
+     * USE-CASE: user clicks cancel edit after clicking edit on existing project
+     */
     const handleCancelEdit = () => {
         setEditMode(false);
         setEditedProject({});
@@ -149,6 +204,12 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         const uploadPromises = [];
         for (const dataset of selectedDatasets) {
             for (const file of Array.from(dataset)) {
+                //add species in right here
+                if(file.name=="features.tsv.gz"){
+                    let spec = findSpecies(file, setSpecies).toString();
+                    dataset.species = spec;
+                }
+                
                 uploadPromises.push(uploadToS3Bucket(file, project, s3Client, datasetUploadBucket));
             }
         }
@@ -186,14 +247,28 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             else {
                 console.log("inserting new project")
                 console.log(editedProject)
-                /* for(const project of existingProjects){
-                    if(project.name==editedProject.name){
-                        setWrongName(true)
-                        setIsDataLoading(false)
-                        return
-                    }
-                } */
+
                 var newProject = { user: user, ...editedProject, runs: []};
+                //newProject.datasets an array of objects - find the correct dataset
+                console.log(selectedDatasets, "SELECTED HERE")
+                for (const dataset of selectedDatasets) {
+                    for (const file of Array.from(dataset)) {
+                        //add species in right here
+                        if(file.name=="features.tsv.gz"){
+                            const folderName = dataset[1].webkitRelativePath.split('/')[0];
+                            const spec = await findSpecies(file, setSpecies)
+                            for(var datas of newProject.datasets){
+                                if(datas.name == folderName){
+                                    datas.species = spec
+                                    
+                                }
+                            }
+                            
+                        };
+                    };
+                };
+                console.log(newProject.datasets, "AFTER")
+                
                 const resp = await createProject(newProject, token);
                 setEditedProject(resp)
                 const id=resp.mongo_response
@@ -203,7 +278,6 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 setSelectedDatasets(newProject.datasets)
                 console.log(selectedDatasets,'DATASETS HERE')
                 await uploadDatasetsToS3(selectedDatasets, newProject, s3Client, datasetUploadBucket);
-                //make insert _id call
                 resProject = {  _id: id, ...newProject }; 
             } 
 
@@ -310,12 +384,11 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         <div>
                             <h1 className='m-2 text-2xl font-bold text-blue'>Project Name</h1>
                             <input
-                                className={`${wrongName?`border border-rose-500`:`border border-blue`} m-2 text-black rounded-sm`}
+                                className={`border border-blue m-2 text-black rounded-sm`}
                                 type="text"
                                 value={editedProject.name || ''}
                                 onChange={e => setEditedProject({ ...editedProject, name: e.target.value })}
                             />
-                            {wrongName&&(<h2 className='italic text-rose-500 font-roboto'>Cannot have same name as another project</h2>)}
                         </div>
                         <div>
                             <p className='m-2 font-bold text-blue text-md'>Project Description</p>
@@ -327,17 +400,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                                 onChange={e => setEditedProject({ ...editedProject, description: e.target.value })}
                             />
                         </div>
-
-                        <div>
-                            <h1 className='m-2 font-bold text-blue'>Species Selection</h1>
-                            <div className='dropdown'>
-                                <select onChange={e => setEditedProject({...editedProject, species: e.target.value})} value={editedProject.species}>
-                                    <option value={""}>Pick a species</option>
-                                    <option value={"human"}>Homo sapiens</option>
-                                    <option value={"mouse"}>Mus musculus</option>
-                                </select>
-                            </div>
-                        </div>
+                    
 
                         <div>
                             <div className='m-2 font-bold text-blue'>Datasets:</div>
@@ -380,7 +443,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                             />
                         </div>
 
-                        <button className={`border px-2 py-1 mt-5 m-2 rounded-md hover:bg-cyan hover:text-black`} disabled={!editedProject.species || editedProject.species==='' || uploadedFolders.length===0 } onClick={handleSaveEdit}>Save</button>
+                        <button className={`border px-2 py-1 mt-5 m-2 rounded-md hover:bg-cyan hover:text-black`} disabled={uploadedFolders.length===0 } onClick={handleSaveEdit}>Save</button>
                         <button className='border px-2 py-1 mt-5 m-2 rounded-md hover:bg-red-400 hover:text-black' onClick={handleCancelEdit}>Cancel</button>
                     </div>
                 )}

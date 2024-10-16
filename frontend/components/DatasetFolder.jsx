@@ -5,17 +5,15 @@ import {BsFillCheckSquareFill} from 'react-icons/bs';
 import { useRouter } from 'next/router';
 import { useProjectContext } from './utils/projectContext';
 import { beginQualityControl } from './utils/mongoClient.mjs';
-import QualityControlModal from './QualityControlModal';
 import RerunModal from './RerunModal';
 
 
 const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
   const router = useRouter();
-  const {name, status, nickname,dataset_id} = dataset;
+  const {name, status, nickname,dataset_id, species} = dataset;
 
   const {selectedProject} = useProjectContext();
   const [showInfo,setShowInfo] = useState(false)
-  const [showModal, setShowModal] = useState(false);
   const [rerunModal, setRerunModal] = useState(false);
   const [mouseIn, setMouseIn] = useState(true);
 
@@ -26,7 +24,7 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
 
   const newQCButtonClick = () => {
     if (status == "complete") setRerunModal(true);
-    else setShowModal(true);
+    else beginQC()
   }
 
   const handleView = () => {
@@ -35,25 +33,18 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
     router.push(`/QualityControl?dataset=${name}&completed=true`);
   }
 
-  const beginQC = (QCtype) => {
-    setShowModal(false);
+  const beginQC = () => {
     setRerunModal(false);
 
-    console.log("Performing QC with doublet finder on:", name);
+    console.log("Performing QC :", name);
 
     const begin = async () => {
       console.log("selected project is", selectedProject);
       const response = await beginQualityControl(selectedProject.user, selectedProject.project_id, dataset_id, token);
       if (response) {
         console.log(response);
-        if (QCtype === "default") { 
-          console.log("default!");
-          router.push(`/loading?task=${response.taskArn}&dataset=${dataset_id}&name=${name}&min=${200}&max=${2500}&mt=${5}`);
-        }
-        if (QCtype === "manual") {
-          console.log("manual!");
-          router.push(`/QualityControlForm?task=${response.taskArn}&dataset=${dataset_id}&name=${name}`);
-        }
+        console.log(name, "NAME HERE")
+        router.push(`/loading?task=${response.taskArn}&dataset=${dataset_id}&name=${name}&species=${selectedProject.species}`);
       } else {
         console.log("Error beginning QC...");
         return;
@@ -90,7 +81,10 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
         <div className='text-sm text-black'>
           {editmode?(
                 <input type="text" placeholder={name} onChange={handleInputChange}></input>
-              ):(<div>{nickname}</div>)}
+              ):
+              (<div>
+                  {nickname}
+                </div>)}
               </div>
         {!editmode ?
         <>
@@ -114,12 +108,12 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
           </div>
         )}
         </> : <></>}
+        <h1 className= 'pl-10'>{species}</h1>
         <div>
           {rerunModal && (
               <RerunModal
                 handleRerun={() =>{ 
                   setRerunModal(false)
-                  setShowModal(true)
                 }}
                 handleView={handleView}
                 handleEnter={() => setMouseIn(true)}
@@ -127,16 +121,7 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
                 handleClick={() => {(!mouseIn) && setRerunModal(false)}}
               />
           )}
-          {showModal && (
-              <QualityControlModal
-                selectedProject={selectedProject}
-                handleDefault={() => beginQC("default")}
-                handleManual={() => beginQC("manual")}
-                handleEnter={() => setMouseIn(true)}
-                handleLeave={() => setMouseIn(false)}
-                handleClick={() => { if (!mouseIn) {setShowModal(false); setRerunModal(false);} }}
-              />
-          )}
+
         </div>
       </div>
     </div>
