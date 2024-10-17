@@ -54,3 +54,16 @@ export const VLN_PLOTS_BUCKET = (ENVVV === "dev") ? "cellborgviolinplotsbucket" 
 
 export const AWS_SECRET_ACCESS_KEY = process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || "";
 export const AWS_ACCESS_KEY_ID = process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || "";
+
+export const MtToSpecies = {'MT-ND1': "Homo sapiens",
+                             "mt-Nd1":"Mus musculus", 
+                             "mt-nd1":"Danio rerio", 
+                             "mt:ND1":"Drosophila melanogaster", 
+                             "Mt-nd1":"Rattus Norvegicus"}
+export const SpeciesToMt = {
+                            "Homo sapiens":"MT-",
+                            "Mus musculus":"mt-",
+                            "Danio rerio":"mt-",
+                            "Rattus norvegicus":"Mt-",
+                            "Drosophila melanogaster":"mt:"
+}

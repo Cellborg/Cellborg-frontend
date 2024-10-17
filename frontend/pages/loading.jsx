@@ -5,7 +5,8 @@ import {MutatingDots} from 'react-loader-spinner';
 import io from 'socket.io-client';
 import {socketio} from '../constants.js';
 import { useProjectContext } from '../components/utils/projectContext';
-import { performQualityControl } from '../components/utils/mongoClient.mjs';
+import { performQCMetricsPrePlot} from '../components/utils/mongoClient.mjs';
+import { SpeciesToMt } from '../constants.js';
 import cookie from "cookie";
 import { get } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
@@ -15,7 +16,7 @@ import {SESSION_COOKIE} from '../constants'
 const Loading = ({data: token}) => {
   console.log("token:", token);
   const router = useRouter();
-  const { task,dataset,name,min,max,mt } = router.query;
+  const { task,dataset,name,species} = router.query;
   const { selectedProject, setSelectedProject, setProjects, projects } = useProjectContext();
   const [showForm,setShowForm]=useState(false);
   
@@ -26,29 +27,52 @@ const Loading = ({data: token}) => {
     const socket = io(socketio);
     console.log("Emitting register connection for", selectedProject, selectedProject.user);
     socket.emit('RegisterConnection', selectedProject.user);
-    socket.on('QC_Complete', async (data) => {
-        const { user, project, dataset, cell_count, gene_count } = data;   
+
+    //for QC pre-plot 
+    socket.on('QC_Pre_Plot_Complete', async (data) => {
+        const { user, project, dataset} = data;   
         console.log("QC completed for:", data);
-        console.log(`Found ${gene_count} genes within ${cell_count} cells`);
-        //TODO: set dataset info using cell_count, gene_count
-        // const projectList = JSON.parse(localStorage.getItem('cachedProjects'));
         const projectList = await get('cachedProjects');
         console.log("project list:", projectList)
         const projIdx = projectList.findIndex(p => p.project_id == project);
         console.log(projIdx)
         const dataIdx = projectList[projIdx].datasets.findIndex(d => d.dataset_id === dataset);
 
-        if (projectList[projIdx].datasets[dataIdx].status !== "complete") {
-            projectList[projIdx].datasets[dataIdx].status ="complete";
+        if (projectList[projIdx].datasets[dataIdx].status !== "prePlot") {
+            projectList[projIdx].datasets[dataIdx].status ="prePlot";
             setProjects(projectList);
             setSelectedProject(projectList[projIdx]);
-            console.log(`dataset ${dataset} marked complete`)
+            console.log(`dataset ${dataset} marked prePlot`)
         }
         else {
-            console.log(`no need to update, dataset ${dataset} already complete`)
+            console.log(`no need to update, dataset ${dataset} already prePlotted`)
         }
-        router.push(`/QualityControl?datasetId=${dataset}&datasetName=${name}`);
+        router.push(`/QCMetrics?datasetId=${dataset}&datasetName=${name}&completed=${true}`);
     });
+
+    //for doublets
+    socket.on('QC_Doublet_Complete', async(data)=>{
+      const {user, project, dataset} = data;
+      console.log("QC Doublets finished for: ", data);
+
+      const projectList = await get('cachedProjects');
+      console.log("project list:", projectList)
+      const projIdx = projectList.findIndex(p => p.project_id == project);
+      console.log(projIdx);
+      const dataIdx = projectList[projIdx].datasets.findIndex(d => d.dataset_id === dataset);
+
+      if (projectList[projIdx].datasets[dataIdx].status !== "complete") {
+          projectList[projIdx].datasets[dataIdx].status ="complete";
+          setProjects(projectList);
+          setSelectedProject(projectList[projIdx]);
+          console.log(`dataset ${dataset} marked complete`);
+      }
+      else {
+          console.log(`no need to update, dataset ${dataset} already complete`)
+      }
+      //router.push(`/QCDoublets?datasetId=${dataset}&datasetName=${name}&completed=${true}`)
+      router.push('/dashboard')
+    })
     return () => {
         socket.disconnect();
     };
@@ -70,11 +94,12 @@ const Loading = ({data: token}) => {
         const data = await response.json();
         if (data.ready === true) { 
             setIsLoading(false);
-            console.log('YOU ARE LOOKING FOR THIS', selectedProject.user, selectedProject.project_id, dataset, min, max, mt);
+
             //TODO: make req in dashboard 
-            const response = await performQualityControl(selectedProject.user, selectedProject.project_id, dataset, Number(min), Number(max), Number(mt), token);
-            // performQualityControl endpoint 
-            console.log('Response for perform quality control is:', response);
+            const mt = SpeciesToMt[species]
+            const response = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
+            // performQCMetrics endpoint 
+            console.log('Response for perform qc metrics is:', response);
         }
         else if(data.ready === false) {
           setTimeout(checkTaskStatus, 5000); //check task status again after 5 seconds
@@ -88,7 +113,7 @@ const Loading = ({data: token}) => {
     if (isLoading) {
       checkTaskStatus();
     }
-  }, [isLoading, router, dataset, task, max, min, mt, selectedProject.project_id, selectedProject.user, token]);
+  }, [isLoading, router, dataset, task,species, selectedProject.project_id, selectedProject.user, token]);
 
   return (
     <div className='w-screen h-screen flex justify-center items-center'>

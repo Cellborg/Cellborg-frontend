@@ -197,7 +197,7 @@ const Hero = () => {
       </div>
       <div className='border border-black w-3/5 h-full bg-blue flex items-center justify-center'>
         {/*Banner image ---- blob*/}
-          <Image className='w-full h-full pt-32 pr-20' src={Rplot.src} alt='UMAP Plot'/>
+          <img className='w-full h-full pt-32 pr-20' src={Rplot.src} alt='UMAP Plot'/>
       </div>
     </div>
     {/*WHY CELLBORG SECTION */}
@@ -212,7 +212,7 @@ const Hero = () => {
               className="relative overflow-hidden lg:w-full h-full z-3"
             >
             <div className='text-on-white-landing relative z-10 whitespace-normal items-center flex flex-col justify-between h-full py-4 font-nunito'>
-              <Image src={box.image} className='w-1/3 pl-5 '/>
+              <img src={box.image} className='w-1/3 pl-5 '/>
               <h1 className=' mx-10 sm:pt-20 md:pt-10 pt-5 text-xl sm:text-3xl md:text-2xl lg:text-4xl font-bold'>{box.title}</h1>
               <p className='mx-10 pb-10 lg:pt-10 pt-5 text-md text-center'>{box.description}</p>
             </div>
@@ -519,16 +519,16 @@ const Hero = () => {
       <h1 className='text-3xl font-nunito'>Trusted by reseachers at</h1>
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4  gap-6 w-full my-10'>
         <div className='aspect-square flex items-center justify-center'>
-          <Image src={UTD.src}/>
+          <img src={UTD.src}/>
         </div>
         <div className='aspect-square flex items-center justify-center px-5'>
-          <Image src={UTSW.src}/>
+          <img src={UTSW.src}/>
         </div>
         <div className='aspect-square flex items-center justify-center'>
-          <Image src={UCI.src}/>
+          <img src={UCI.src}/>
         </div>
         <div className='aspect-square flex items-center justify-center'>
-          <Image src={UCLA.src}/>
+          <img src={UCLA.src}/>
         </div>
       </div> 
     </div>

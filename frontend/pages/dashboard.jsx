@@ -23,9 +23,9 @@ const Dashboard = ({data: session, token}) => {
 
     useEffect(() => {
       setUser(userId); 
-      console.log("setting sel proj to null here: changes went through")
+      //console.log("setting sel proj to null here: changes went through")
       setSelectedProject(null)
-    }, [userId, setUser])
+    }, [userId, setUser, setSelectedProject])
 
     useEffect(() => {
       const fetchUserData = async () => {

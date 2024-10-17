@@ -2,42 +2,39 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { getSession } from 'next-auth/react';
 import {MutatingDots} from 'react-loader-spinner';
-import PagesNavbar from '../components/PagesNavbar';
-import { useProjectContext } from '../components/utils/projectContext';
+import PagesNavbar from '../components/PagesNavbar.jsx';
+import { useProjectContext } from '../components/utils/projectContext.js';
 import { getPlotData } from '../components/utils/s3client.mjs';
 import {datasetqcBucket} from '../constants.js';
 import { useRouter } from 'next/router';
 import { handleFinishQC } from '../components/utils/qcClient.mjs';
 import { getToken } from '../components/utils/security.mjs';
-import PlotCarousel from '../components/PlotCarousel';
-import BugReportForm from '../components/BugReportForm';
+import PlotCarousel from '../components/PlotCarousel.jsx';
+import BugReportForm from '../components/BugReportForm.jsx';
 import { GoReport } from "react-icons/go";
+import {finishDoublets} from "../components/utils/mongoClient.mjs";
 
-const DynamicViolinPlot = dynamic(() => import('../components/plots/ViolinPlot'), {ssr: false});
-const DynamicFeatureScatterPlot = dynamic(() => import('../components/plots/FeatureScatterPlot'), {ssr: false});
-const DynamicDoubletsPlot = dynamic(() => import('../components/plots/DoubletPlot'), {ssr: false});
+const DynamicDoubletsPlot = dynamic(() => import('../components/plots/DoubletPlot.jsx'), {ssr: false});
 
-const QualityControl = ({data: session, token, datasetName,datasetId, completed}) => {
+const QCDoublets = ({data: session, token, datasetName,datasetId, completed}) => {
   const router = useRouter();
   const { selectedProject } = useProjectContext();
   const [isDataLoading,setIsDataLoading]=useState(false)
-  const [activePlotIndex, setActivePlotIndex] = useState(0);
-  const [jsonData, setJsonData] = useState(null);
   const [doubletsData, setDoubletsData] = useState(null);
+  const [doubletScore, setDoubletScore] = useState();
   const [showForm,setShowForm]=useState(false);
+
+
   useEffect(() => {
     setIsDataLoading(true);
   
-    const violinPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${datasetId}/plots/QcViolinPlotData.json`;
     const doubletPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${datasetId}/plots/doubletplot.json`;
-    console.log(`Getting plots 1: ${violinPlotKey} and 2: ${doubletPlotKey} from ${datasetqcBucket}`);
+    console.log(`Getting plots 2: ${doubletPlotKey} from ${datasetqcBucket}`);
     console.log(datasetId);
     Promise.all([
-      getPlotData(datasetqcBucket, violinPlotKey),
       getPlotData(datasetqcBucket, doubletPlotKey),
     ])
-      .then(([violinData, doubletData]) => {
-        setJsonData(violinData);
+      .then(([doubletData]) => {
         setDoubletsData(doubletData);
         setIsDataLoading(false);
       })
@@ -58,14 +55,18 @@ const QualityControl = ({data: session, token, datasetName,datasetId, completed}
   }
   }, [selectedProject, datasetId, router, completed]);
 
+  async function sendDoubletScore(score){
+    const response = await finishDoublets(selectedProject.user, selectedProject.project_id, datasetId, score,token)
+    if(response){
+      console.log("Doublets has been finished: ", response);
+    }
+  }
   const handleCompleteViewingQCResults = (router) => {
     console.log("Finished viewing QC results.. pushing to dashboard");
-    router.push('/dashboard');
+    router.push('/dashboard')
   };
 
   const plots = [
-    <DynamicViolinPlot key={0} plotData={jsonData} className='w-auto'/>,
-    <DynamicFeatureScatterPlot key={1} plotData={jsonData} className='w-auto'/>, //highlight points below n above the cutoff
     <DynamicDoubletsPlot key={2} data={doubletsData} className='w-auto'/>
   ];
 
@@ -97,13 +98,20 @@ const QualityControl = ({data: session, token, datasetName,datasetId, completed}
           />
         :<div className='w-full h-full p-5'>
           <PlotCarousel plots={plots}/>
+          <h1>Doublet Score</h1>
+              <input 
+              type='number' 
+              classname=''
+              min='0'
+              onChange={(e)=>{setDoubletScore(e.target.value)}}
+              />
             <div className='flex items-center justify-center mt-1'>
               <button
                 className="rounded-md bg-blue text-white px-10 py-4 text-lg font-bold hover:bg-blue/70 transition ease-in-out duration-100"
                 onClick={() => {
-                  completed ? 
-                    handleCompleteViewingQCResults(router) :
-                    handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token)
+                    sendDoubletScore(doubletScore)
+                    handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token);
+                    handleCompleteViewingQCResults(router);
                 }}
               >
                 Finish QC for {datasetName}
@@ -145,4 +153,4 @@ export async function getServerSideProps(context) {
     }
 };
 
-export default QualityControl;
+export default QCDoublets;

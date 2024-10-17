@@ -277,9 +277,8 @@ export async function getServerSideProps(context) {
     // Get the user's JWT access token from next's server-side cookie
     const token = await getToken(context);
     const { n, c, d, r } = context.query;
-    const session = await getSession(context);
     console.log(n, c, d, r);
-    if (!token || !session) {
+    if (!token) {
       return {
         redirect: {
           destination: '/Login',
@@ -289,7 +288,6 @@ export async function getServerSideProps(context) {
     }
       return {
         props: { 
-          data: session,
           token,
           n, c, d, r
         }

@@ -90,29 +90,50 @@ async function loadQCPlot(selectedProject) {
     return await mongoRequest('qc/loadQualityControlPlot', data);
 };
 
-async function beginQualityControl(user, project, datasetName, token) {
-    console.log('hellos')
+async function beginQualityControl(user, project, datasetId, token) {
     const data = {
         user: user,
         project: project,
-        dataset: datasetName
+        dataset: datasetId
     };
     console.log(data);
     return await mongoRequest('qc/beginQualityControl', data, token);
 };
 
-async function performQualityControl(projectUser, projectId, datasetName, minValue, maxValue, mtValue, token) {
+async function performQCMetricsPrePlot(projectUser, projectId, datasetId,mt, token) {
     const data = {
         user: projectUser,
         project: projectId,
-        dataset: datasetName,
-        min: minValue,
-        max: maxValue,
-        mt: mtValue
+        dataset: datasetId,
+        mt:mt
     };
     console.log(data);
-    return await mongoRequest('qc/performQualityControl', data, token);
+    return await mongoRequest('qc/performQCMetricsPrePlot', data, token);
 };
+
+async function performQCDoublets(projectUser,projectId,datasetId, counts, genes, mito,token){
+    const data = {
+        user: projectUser,
+        project:projectId,
+        dataset: datasetId,
+        countMax: counts.max,
+        countMin: counts.min,
+        geneMax: genes.max,
+        geneMin:genes.min,
+        mitoMax: mito.max,
+        mitoMin: mito.min,
+    };
+    return await mongoRequest('qc/performQCDoublets', data, token)
+}
+async function finishDoublets(user, project, dataset, doubletScore, token){
+    const data = {
+        user:user,
+        project:project,
+        dataset:dataset,
+        doubletScore: doubletScore
+    };
+    return await mongoRequest('qc/finishDoublets', data, token);
+}
 
 async function begin(prefix) {
     const data = { prefix: prefix };
@@ -239,7 +260,7 @@ async function collectGenenames(geneNameRequest) {
 
 
 export { getProjects, getProject, deleteProject, updateProject, createProject, getMetadata, signUp, getUser, deleteUser,
-loadQCPlot, beginQualityControl, performQualityControl, begin, varfeatureanalysis, loadGeneFeaturePlot,
+loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets, begin, varfeatureanalysis, loadGeneFeaturePlot,
 newAnalysisId, beginAnalysis, loadCPlot, collectGenenames, heatmapanalysis, psuedotimeAnalysis, loadDotPlot, loadVlnPlots, 
 annotateClusters, findAllMarkersAnalysis, findMarkersAnalysis,sendAccountRequest,sendReportBug,newDatasetId }
 
