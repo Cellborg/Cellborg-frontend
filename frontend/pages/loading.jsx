@@ -96,7 +96,10 @@ const Loading = ({data: token}) => {
             setIsLoading(false);
 
             //TODO: make req in dashboard 
+
             const mt = SpeciesToMt[species]
+            console.log("mt from dataset: ",mt)
+            consoke.log("species associated with datatset: ", species)
             const response = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
             // performQCMetrics endpoint 
             console.log('Response for perform qc metrics is:', response);
