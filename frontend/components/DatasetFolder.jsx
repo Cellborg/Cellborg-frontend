@@ -40,6 +40,7 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
 
     const begin = async () => {
       console.log("selected project is", selectedProject);
+      console.log("species is: ", species);
       const response = await beginQualityControl(selectedProject.user, selectedProject.project_id, dataset_id,species, token);
       if (response) {
         console.log(response);
