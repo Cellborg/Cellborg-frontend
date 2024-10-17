@@ -27,7 +27,7 @@ const nextConfigProd = {
   output: 'standalone'
 };
 
-// Debug logging for environment check
+/*// Debug logging for environment check
 console.log("Environment Variable ENVV is:", ENV);
 
 const getNextConfig = () => {
@@ -40,4 +40,18 @@ const getNextConfig = () => {
   }
 };
 
-module.exports = getNextConfig();
+module.exports = getNextConfig();*/
+
+module.exports = {
+  reactStrictMode: true,
+  env: {
+    // pass in NEXTAUTH_URL env. var when deploying to beta/prod
+    NEXTAUTH_SECRET: "gBsuHo9HV6D4zrF+HtLBQ1C8n9W7h37W5beOuDXBw0A=",
+    NEXTAUTH_URL: "https://beta.cellborg.bio"
+
+  },
+  images: {
+    domains: ['images.unsplash.com',]
+  },
+  output: 'standalone'
+}
