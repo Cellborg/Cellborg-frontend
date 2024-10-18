@@ -4,8 +4,7 @@ import { LOGIN_URL } from "../../../constants";
 export default NextAuth ({
    session: {
     strategy: "jwt",
-    maxAge: 15 * 60 //15 minutes
-    //TODO: set updateAge, and figure out writing to database to extend jwt life
+    maxAge: 20 * 60 //20 minutes
   }, 
   providers: [
     CredentialsProvider({
