@@ -239,7 +239,6 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             let resProject;
             if (editedProject._id) { //project already has a mongo _id -> we are updating + should be in cache
                 console.log(editedProject._id);
-                console.log(editedProject,'EDITED PROJECT HERE');
                 await uploadDatasetsToS3(selectedDatasets, editedProject, s3Client, datasetUploadBucket);
                 await updateProject(editedProject._id, editedProject, token);
                 resProject = editedProject;
@@ -248,9 +247,10 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 console.log("inserting new project")
                 console.log(editedProject)
 
+
+                console.log(user)
                 var newProject = { user: user, ...editedProject, runs: []};
                 //newProject.datasets an array of objects - find the correct dataset
-                console.log(selectedDatasets, "SELECTED HERE")
                 for (const dataset of selectedDatasets) {
                     for (const file of Array.from(dataset)) {
                         //add species in right here
@@ -267,16 +267,13 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         };
                     };
                 };
-                console.log(newProject.datasets, "AFTER")
                 
                 const resp = await createProject(newProject, token);
                 setEditedProject(resp)
                 const id=resp.mongo_response
                 newProject=resp.project
-                console.log(newProject,'NEW PROJECT IS HERE')
                 console.log(newProject.datasets)
                 setSelectedDatasets(newProject.datasets)
-                console.log(selectedDatasets,'DATASETS HERE')
                 await uploadDatasetsToS3(selectedDatasets, newProject, s3Client, datasetUploadBucket);
                 resProject = {  _id: id, ...newProject }; 
             } 

@@ -15,19 +15,21 @@ import BugReportForm from '../components/BugReportForm';
 const Dashboard = ({data: session, token}) => {
     const userId=session.user.user_id
 
-    const { setProjects, selectedProject, setSelectedProject, setUser, setUserData } = useProjectContext();
+    const { setProjects,projects, setSelectedProject, setUser, setUserData } = useProjectContext();
     const [editMode, setEditMode] = useState(false);
     const [deleteMode,setDeleteMode]=useState(false);
     const [deletedProject,setDeletedProject]=useState({});
     const [showForm,setShowForm]=useState(false);
 
+  /*
+   *Initializes project context vars
+   *Sets user to user ID in application memory
+   *Sets selected project variable to null upon load
+   *Sets user data (firstname,lastname, email, password, user_id)
+   */
     useEffect(() => {
-      setUser(userId); 
-      //console.log("setting sel proj to null here: changes went through")
+      setUser(userId);
       setSelectedProject(null)
-    }, [userId, setUser, setSelectedProject])
-
-    useEffect(() => {
       const fetchUserData = async () => {
         try {
           const res = await getUser(userId, token);
@@ -36,14 +38,20 @@ const Dashboard = ({data: session, token}) => {
         catch (err) { console.log("error: ", err); }
       };
       fetchUserData();
-    }, [userId, setUser, setUserData, token]);
+    }, [userId, setUser, setUserData, setSelectedProject, token])
 
+    /*
+     * Sets selected project in context and user modes
+     */
     const handleSelectProject = project => {
       console.log("Selected Project: ", project);
       setSelectedProject(project);
       setEditMode(false)
       setDeleteMode(false);
     };
+    /*
+     * Sets project context for selected project to empty attributes, sets edit-mode to true
+     */
     const createNewProject = () => {
         setSelectedProject({
             name: '',
@@ -51,19 +59,25 @@ const Dashboard = ({data: session, token}) => {
         });
         setEditMode(true);        
     }
-
+    /*
+     * gets out of delete mode by setting deletedProject in context to empty and user-mode to false
+     */
   const exitDeleted=()=>{
     setDeletedProject({})
     setDeleteMode(false)
-    console.log(deleteMode)
   }
 
-  //delete project from db and cache
+  /**
+     * @param {}
+     * @returns
+     * retrieves from cache and deletes from mongo and s3
+     * updates cache and sets context and env
+     * USE-CASE: user clicks delete on delete confirmation modal
+     */
   const handleDelete= async()=>{
     console.log(deletedProject)
     const cachedProjects = await get('cachedProjects');
-    const existingProjects = (cachedProjects && cachedProjects.length > 1) ? cachedProjects : [];
-    console.log('existing projects from deleted',existingProjects)
+
     //delete the project in MongoDB
     console.log(deletedProject);
     await deleteProject(deletedProject._id, deletedProject, token);
@@ -76,7 +90,9 @@ const Dashboard = ({data: session, token}) => {
     deleteProjectFromS3(deletedProject); 
 
     //set projects with deleted project
-    const deletedProjectList=existingProjects.filter(project=>project._id!==deletedProject._id)
+    const deletedProjectList=cachedProjects.filter(project=>project._id!==deletedProject._id)
+    set('cachedProjects', deletedProjectList)
+
     //update cache
     setProjects(deletedProjectList)
     setDeletedProject({})
@@ -98,7 +114,6 @@ const Dashboard = ({data: session, token}) => {
     {deleteMode && (
         <div className="font-lato fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-20">
           <DeleteConfirmationModal
-            selectedProject={selectedProject}
             handleDelete={handleDelete}
             exitDeleted={exitDeleted}
           />
