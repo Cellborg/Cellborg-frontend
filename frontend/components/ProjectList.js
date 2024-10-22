@@ -21,6 +21,8 @@ const ProjectList = ({ onSelectProject, user, createNewProject, token}) => {
             console.log("Project data: ", projectData);
             setProjects(projectData);
             console.log(`Fetched ${projectData}`)
+            //sync cache with mongo
+            set('cachedProjects', projectData)
           }
           catch (e) { console.log("error:", e) }
         }
