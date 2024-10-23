@@ -19,6 +19,7 @@ export const findSpecies=(file)=>{
                     resolve(retard);
                 }
               }
+              resolve(null)
             
             }
         reader.onerror = reject;

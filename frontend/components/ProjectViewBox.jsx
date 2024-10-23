@@ -267,11 +267,15 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         if(file.name=="features.tsv.gz"){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
                             const spec = await findSpecies(file)
-                            for(var datas of editedProject.datasets){
-                                if(datas.name == folderName){
-                                    datas.species = spec // tag dataset with species
-                                    
+                            if(spec){
+                                for(var datas of editedProject.datasets){
+                                    if(datas.name == folderName){
+                                        datas.species = spec // tag dataset with species
+                                        
+                                    }
                                 }
+                            }else{
+                                throw Error("No species found")
                             }
                             
                         };
@@ -300,11 +304,15 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         if(file.name=="features.tsv.gz"){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
                             const spec = await findSpecies(file)
-                            for(var datas of newProject.datasets){
-                                if(datas.name == folderName){
-                                    datas.species = spec //tag dataset here
-                                    
+                            if(spec){
+                                for(var datas of newProject.datasets){
+                                    if(datas.name == folderName){
+                                        datas.species = spec //tag dataset here
+                                        
+                                    }
                                 }
+                            }else{
+                                throw Error("No species found")
                             }
                             
                         };
@@ -359,7 +367,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         }
         console.log(editedProject)
       };
-      
+
     return (
         <div className='font-lora rounded-sm h-full w-full border bg-slate-50 overflow-y-scroll'>
             {isDataLoading ? (
