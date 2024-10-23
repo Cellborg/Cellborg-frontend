@@ -49,7 +49,7 @@ async function deleteProject(projectId, entireProject, token) {
 
 async function updateProject(projectId, editedProject, token) {
     const data = {id: projectId, project: editedProject};
-    await mongoRequest('project/updateproject', data, token);
+    return await mongoRequest('project/updateproject', data, token);
 };
 
 async function createProject(project, token) {

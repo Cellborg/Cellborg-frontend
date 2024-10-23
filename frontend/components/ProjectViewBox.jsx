@@ -4,7 +4,7 @@ import { s3Client } from './utils/s3client.mjs';
 import {PutObjectCommand} from "@aws-sdk/client-s3"; 
 import { useRouter } from 'next/router';
 import { MutatingDots } from 'react-loader-spinner';
-import { createProject, newAnalysisId, beginAnalysis, updateProject,newDatasetId } from './utils/mongoClient.mjs';
+import { createProject, newAnalysisId, beginAnalysis, updateProject} from './utils/mongoClient.mjs';
 import { AnalysisRun } from './AnalysisRun';
 import {datasetUploadBucket} from '../constants.js';
 import dynamic from 'next/dynamic';
@@ -28,7 +28,6 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
     const [editedProject, setEditedProject] = useState({});
     const [uploadedFolders, setUploadedFolders] = useState([]);
     const [selectedDatasets, setSelectedDatasets] = useState([]);
-    const [species, setSpecies] = useState("No Species");
     const { setProjects, user, selectedProject, setSelectedProject, setAnalysisId } = useProjectContext();
 
     /** 
@@ -150,14 +149,17 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         setEditedProject({});
         setUploadedFolders([]);
     };
-
+    /**
+     * @param {Object} project {user: str, name: str, datasets: list(Objects), runs:[], project_id:str}{
+     * @param {Object} files
+     * @returns {String} key
+     * USE-CASE: generates s3 key (path) 
+     */
     function generateS3Key(project, file) {
         const user = project.user;
         const projectId = project.project_id;
         var dataset_id;
         for(const dataset in Array.from(project.datasets)){
-            //console.log(Array.from(project.datasets),'ARR IS HERE')
-            //console.log(project.datasets[0],'DATASET HERE')
             if(project.datasets[dataset].name===file.webkitRelativePath.split('/')[0]){
                 console.log(project.datasets[dataset].dataset_id,'DATASET_ID')
                 dataset_id=project.datasets[dataset].dataset_id
@@ -171,6 +173,16 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         return key;
     }
     
+    /**
+     * 
+     * @param {Object} file 
+     * @param {Object} project 
+     * @param {Object} s3Client 
+     * @param {String} datasetUploadBucket 
+     * @returns 
+     * USE-CASE: uploads datasets to s3 bucket
+     * REFERENCE: uploadDatasetstoS3
+     */
     async function uploadToS3Bucket(file, project, s3Client, datasetUploadBucket) {
         console.log(file)
         const MAX_RETRIES = 3;
@@ -199,16 +211,19 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         }
     }
     
+    /**
+     * 
+     * @param {List} selectedDatasets 
+     * @param {Object} project 
+     * @param {Object} s3Client 
+     * @param {String} datasetUploadBucket 
+     * USE-CASE: uploads datasets to s3
+     */
     async function uploadDatasetsToS3(selectedDatasets, project, s3Client, datasetUploadBucket) {
         console.log("selected datasets:", selectedDatasets);
         const uploadPromises = [];
         for (const dataset of selectedDatasets) {
             for (const file of Array.from(dataset)) {
-                //add species in right here
-                if(file.name=="features.tsv.gz"){
-                    let spec = findSpecies(file, setSpecies).toString();
-                    dataset.species = spec;
-                }
                 
                 uploadPromises.push(uploadToS3Bucket(file, project, s3Client, datasetUploadBucket));
             }
@@ -224,26 +239,55 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         console.log("All uploads attempts finished.");
     }    
     
+    /**
+     * 
+     * @returns {boolean}
+     * USE-CASE: checks if qc has been completed on all datasets in selectedProject
+     */
     function qcCompleted() {
         const allCompleted = selectedProject && selectedProject.datasets && selectedProject.datasets.every(dataset => dataset.status === "complete");
         return allCompleted;
     }
     
+    /**
+     * USE-CASE: user clicks save either for new project or edited project
+     */
     const handleSaveEdit = async() => {
         setIsDataLoading(true)
         try {
             const cachedProjects = await get('cachedProjects');
-            // console.log("cached", cachedProjects)
             const existingProjects = (cachedProjects) ? cachedProjects : [];
-            // console.log("existing", existingProjects)
             let resProject;
             if (editedProject._id) { //project already has a mongo _id -> we are updating + should be in cache
                 console.log(editedProject._id);
-                await uploadDatasetsToS3(selectedDatasets, editedProject, s3Client, datasetUploadBucket);
-                await updateProject(editedProject._id, editedProject, token);
-                resProject = editedProject;
+
+                
+                for (const dataset of selectedDatasets) {//find species for all new datasets
+                    for (const file of Array.from(dataset)) {
+                        if(file.name=="features.tsv.gz"){
+                            const folderName = dataset[1].webkitRelativePath.split('/')[0];
+                            const spec = await findSpecies(file)
+                            for(var datas of editedProject.datasets){
+                                if(datas.name == folderName){
+                                    datas.species = spec // tag dataset with species
+                                    
+                                }
+                            }
+                            
+                        };
+                    };
+                };
+                //update mongo and return tagged project with id's for new datasets
+                const res = await updateProject(editedProject._id, editedProject, token);
+                //update edited project with finished updated project
+                setEditedProject(res.project)
+                newProject=res.project
+                setSelectedDatasets(res.project.datasets)
+                //upload tagged dataset to s3
+                await uploadDatasetsToS3(selectedDatasets, newProject, s3Client, datasetUploadBucket);
+                resProject = editedProject; 
             }
-            else {
+            else { //if its a new project
                 console.log("inserting new project")
                 console.log(editedProject)
 
@@ -253,13 +297,12 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 //newProject.datasets an array of objects - find the correct dataset
                 for (const dataset of selectedDatasets) {
                     for (const file of Array.from(dataset)) {
-                        //add species in right here
                         if(file.name=="features.tsv.gz"){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
-                            const spec = await findSpecies(file, setSpecies)
+                            const spec = await findSpecies(file)
                             for(var datas of newProject.datasets){
                                 if(datas.name == folderName){
-                                    datas.species = spec
+                                    datas.species = spec //tag dataset here
                                     
                                 }
                             }
@@ -268,20 +311,25 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                     };
                 };
                 
+                //attach id's and update mongo
                 const resp = await createProject(newProject, token);
-                setEditedProject(resp)
+                
+                //update edited project with tagged project
+                setEditedProject(resp.project)
                 const id=resp.mongo_response
                 newProject=resp.project
+
+
                 console.log(newProject.datasets)
                 setSelectedDatasets(newProject.datasets)
+                //upload to s3 with tagged project
                 await uploadDatasetsToS3(selectedDatasets, newProject, s3Client, datasetUploadBucket);
                 resProject = {  _id: id, ...newProject }; 
             } 
 
+            //update local cache and context
             let editedProjectList = existingProjects.filter(project=> project._id !== resProject._id)
-            // console.log("filtered editedProjectList:", editedProjectList)
             editedProjectList = [...editedProjectList,resProject]
-            // console.log("editedProjectList:", editedProjectList)
 
             // Update the cache with the updated list of projects
             // set('cachedProjects', editedProjectList)
@@ -298,15 +346,20 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         }
     };
 
+    /**
+     * 
+     * @param {String} nicknamedDataset 
+     * USE-CASE: user selects a nickname for dataset
+     */
     const handleUpdateDataset = (nicknamedDataset) => {
-        //change index based on id of dataset
         for (const dataset of editedProject.datasets){
-            if(dataset.name==nicknamedDataset.name){
+            if(dataset.dataset_id==nicknamedDataset.dataset_id){ //check dataset using id for uniqueness
                 dataset.nickname=nicknamedDataset.nickname
             }
         }
         console.log(editedProject)
       };
+      
     return (
         <div className='font-lora rounded-sm h-full w-full border bg-slate-50 overflow-y-scroll'>
             {isDataLoading ? (
