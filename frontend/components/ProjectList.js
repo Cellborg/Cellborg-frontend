@@ -11,21 +11,18 @@ const Project = dynamic(() => import('../components/Project'), {
 
 const ProjectList = ({ onSelectProject, user, createNewProject, token}) => {
     const { projects, setProjects } = useProjectContext();
-
+    /*
+     *Fetches projects from mongo on load
+    */
     useEffect(() => {
-        // Check if projects are already cached in local storage
         const fetchProjects = async () => {
-          const cachedProjects = await get ('cachedProjects');
-          if (cachedProjects && cachedProjects.length > 2) {
-              console.log("Cached projects: ", cachedProjects);
-              setProjects(cachedProjects);
-              return; // No need to fetch if data is already cached
-          }
           try {
             const projectData = await getProjects(user, token);
             console.log("Project data: ", projectData);
             setProjects(projectData);
             console.log(`Fetched ${projectData}`)
+            //sync cache with mongo
+            set('cachedProjects', projectData)
           }
           catch (e) { console.log("error:", e) }
         }

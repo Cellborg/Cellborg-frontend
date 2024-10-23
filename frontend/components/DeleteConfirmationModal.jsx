@@ -1,6 +1,8 @@
 import React from 'react';
+import { useProjectContext } from '../components/utils/projectContext';
 
-const DeleteConfirmationModal = ({ selectedProject, handleDelete, exitDeleted }) => {
+const DeleteConfirmationModal = ({handleDelete, exitDeleted }) => {
+  const {selectedProject} = useProjectContext();
   return ( 
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white p-4 shadow-lg rounded-lg ">

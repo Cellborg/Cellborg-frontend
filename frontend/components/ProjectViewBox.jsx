@@ -260,6 +260,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             let resProject;
             if (editedProject._id) { //project already has a mongo _id -> we are updating + should be in cache
                 console.log(editedProject._id);
+
                 
                 for (const dataset of selectedDatasets) {//find species for all new datasets
                     for (const file of Array.from(dataset)) {
@@ -290,11 +291,11 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 console.log("inserting new project")
                 console.log(editedProject)
 
-                //attach user and runs to new project
+
+                console.log(user)
                 var newProject = { user: user, ...editedProject, runs: []};
-                
-                console.log(selectedDatasets, "SELECTED HERE")
-                for (const dataset of selectedDatasets) { //tag with species
+                //newProject.datasets an array of objects - find the correct dataset
+                for (const dataset of selectedDatasets) {
                     for (const file of Array.from(dataset)) {
                         if(file.name=="features.tsv.gz"){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
@@ -317,6 +318,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 setEditedProject(resp.project)
                 const id=resp.mongo_response
                 newProject=resp.project
+
 
                 console.log(newProject.datasets)
                 setSelectedDatasets(newProject.datasets)
