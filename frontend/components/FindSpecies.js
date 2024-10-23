@@ -3,7 +3,7 @@ import {MtToSpecies } from '../constants';
 const pako = require('pako');
 var retard="";
 
-export const findSpecies=(file, setSpecies)=>{
+export const findSpecies=(file)=>{
     const myPromise =  new Promise ((resolve, reject) =>{
         const reader = new FileReader();
         reader.onload = function(event){
