@@ -4,7 +4,7 @@ import { s3Client } from './utils/s3client.mjs';
 import {PutObjectCommand} from "@aws-sdk/client-s3"; 
 import { useRouter } from 'next/router';
 import { MutatingDots } from 'react-loader-spinner';
-import { createProject, newAnalysisId, beginAnalysis, updateProject,newDatasetId } from './utils/mongoClient.mjs';
+import { createProject, newAnalysisId, beginAnalysis, updateProject} from './utils/mongoClient.mjs';
 import { AnalysisRun } from './AnalysisRun';
 import {datasetUploadBucket} from '../constants.js';
 import dynamic from 'next/dynamic';
@@ -28,7 +28,6 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
     const [editedProject, setEditedProject] = useState({});
     const [uploadedFolders, setUploadedFolders] = useState([]);
     const [selectedDatasets, setSelectedDatasets] = useState([]);
-    const [species, setSpecies] = useState("No Species");
     const { setProjects, user, selectedProject, setSelectedProject, setAnalysisId } = useProjectContext();
 
     /** 
@@ -204,11 +203,6 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         const uploadPromises = [];
         for (const dataset of selectedDatasets) {
             for (const file of Array.from(dataset)) {
-                //add species in right here
-                if(file.name=="features.tsv.gz"){
-                    let spec = findSpecies(file, setSpecies).toString();
-                    dataset.species = spec;
-                }
                 
                 uploadPromises.push(uploadToS3Bucket(file, project, s3Client, datasetUploadBucket));
             }
@@ -239,15 +233,36 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             let resProject;
             if (editedProject._id) { //project already has a mongo _id -> we are updating + should be in cache
                 console.log(editedProject._id);
-                console.log(editedProject,'EDITED PROJECT HERE');
-                await uploadDatasetsToS3(selectedDatasets, editedProject, s3Client, datasetUploadBucket);
-                await updateProject(editedProject._id, editedProject, token);
-                resProject = editedProject;
+                //find species here
+                for (const dataset of selectedDatasets) {
+                    for (const file of Array.from(dataset)) {
+                        //add species in right here
+                        if(file.name=="features.tsv.gz"){
+                            const folderName = dataset[1].webkitRelativePath.split('/')[0];
+                            const spec = await findSpecies(file)
+                            for(var datas of editedProject.datasets){
+                                if(datas.name == folderName){
+                                    datas.species = spec
+                                    
+                                }
+                            }
+                            
+                        };
+                    };
+                };
+                const res = await updateProject(editedProject._id, editedProject, token);
+                
+                setEditedProject(res.project)
+                newProject=res.project
+                setSelectedDatasets(res.project.datasets)
+                
+                await uploadDatasetsToS3(selectedDatasets, newProject, s3Client, datasetUploadBucket);
+                resProject = editedProject; 
             }
             else {
                 console.log("inserting new project")
                 console.log(editedProject)
-
+                
                 var newProject = { user: user, ...editedProject, runs: []};
                 //newProject.datasets an array of objects - find the correct dataset
                 console.log(selectedDatasets, "SELECTED HERE")
@@ -256,7 +271,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         //add species in right here
                         if(file.name=="features.tsv.gz"){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
-                            const spec = await findSpecies(file, setSpecies)
+                            const spec = await findSpecies(file)
                             for(var datas of newProject.datasets){
                                 if(datas.name == folderName){
                                     datas.species = spec
@@ -270,7 +285,8 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 console.log(newProject.datasets, "AFTER")
                 
                 const resp = await createProject(newProject, token);
-                setEditedProject(resp)
+                console.log("NEW PROJ RESP: ", resp);
+                setEditedProject(resp.project)
                 const id=resp.mongo_response
                 newProject=resp.project
                 console.log(newProject,'NEW PROJECT IS HERE')
@@ -304,7 +320,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
     const handleUpdateDataset = (nicknamedDataset) => {
         //change index based on id of dataset
         for (const dataset of editedProject.datasets){
-            if(dataset.name==nicknamedDataset.name){
+            if(dataset.dataset_id==nicknamedDataset.dataset_id){
                 dataset.nickname=nicknamedDataset.nickname
             }
         }
