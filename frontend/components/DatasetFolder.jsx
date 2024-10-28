@@ -44,7 +44,8 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
       if (response) {
         console.log(response);
         console.log(name, "NAME HERE")
-        router.push(`/loading?task=${response.taskArn}&dataset=${dataset_id}&name=${name}&species=${selectedProject.species}`);
+        //need to pull species from dataset not project
+        router.push(`/loading?task=${response.taskArn}&dataset=${dataset_id}&name=${name}&species=${species}`);
       } else {
         console.log("Error beginning QC...");
         return;
