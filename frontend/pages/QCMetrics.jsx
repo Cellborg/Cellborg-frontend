@@ -63,7 +63,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
   useEffect(() => {
     setIsDataLoading(true);
   
-    const violinPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${datasetId}/plots/QcViolinPlotData.json`;
+    const violinPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${datasetId}/plots/QCViolinPlot.json`;
     console.log(`Getting plots 1: ${violinPlotKey} from ${datasetqcBucket}`);
     console.log(datasetId);
     Promise.all([
