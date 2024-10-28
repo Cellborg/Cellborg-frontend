@@ -99,7 +99,7 @@ const Loading = ({data: token}) => {
 
             const mt = SpeciesToMt[species]
             console.log("mt from dataset: ",mt)
-            consoke.log("species associated with datatset: ", species)
+            console.log("species associated with datatset: ", species)
             const response = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
             // performQCMetrics endpoint 
             console.log('Response for perform qc metrics is:', response);
