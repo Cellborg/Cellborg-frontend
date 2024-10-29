@@ -30,7 +30,7 @@ const Loading = ({data: token}) => {
 
     //for QC pre-plot 
     socket.on('QC_Pre_Plot_Complete', async (data) => {
-        const { user, project, dataset} = data;   
+        const { user, project, dataset, stage} = data;   
         console.log("QC completed for:", data);
         const projectList = await get('cachedProjects');
         console.log("project list:", projectList)
