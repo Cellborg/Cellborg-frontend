@@ -18,6 +18,8 @@
     "framer-motion": "^10.16.4",
     "google-protobuf": "^3.21.2",
     "gunzip-file": "^0.1.1",
+    "highcharts": "^11.4.8",
+    "highcharts-react-official": "^3.2.1",
     "idb": "^7.1.1",
     "idb-keyval": "^6.2.1",
     "next": "^13.5.6",
