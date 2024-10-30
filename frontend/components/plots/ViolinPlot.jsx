@@ -45,86 +45,82 @@ const ViolinPlot = ({data}) => {
 
     // Chart 1: Histogram and jittered scatter plot for n_genes
     optionsNGenes = {
-      chart: {
-        type: 'scatter'
-      },
-      title:{
-        text: 'Number of Genes per Cell'
-      },
+      chart: { type: 'column' }, // Default chart type can be set here
+      title: { text: 'Number of Genes per Cell' },
       xAxis: { title: { text: 'n_genes' } },
       yAxis: { title: { text: 'Frequency' } },
       tooltip: {
-        crosshairs: true, // Enables vertical line on hover
-        formatter: function () {
-            return 'X-axis Value: ' + this.x;
-        }
-    },
+          crosshairs: true, // Enables vertical line on hover
+          formatter: function () {
+              return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
+          }
+      },
       series: [
-        {
-            type: 'column',
-            name: 'n_genes Distribution',
-            data: n_genes_histogram,
-            color: 'rgba(124, 181, 236, 0.6)',
-            pointPadding: 0,
-            groupPadding: 0,
-            pointPlacement: 'between'
-        },
-        {
-            name: 'n_genes Scatter',
-            type: 'scatter',
-            data: addJitterBelowXAxis(n_genes_data, -n_genes_variableB, n_genes_variableB),
-            color: 'rgba(124, 181, 236, 0.3)',
-            marker: { radius: 2 }
-        }
-    ]
-    }
+          {
+              name: 'n_genes Distribution',
+              type: 'column', // Specifying type for this series
+              data: n_genes_histogram,
+              color: 'rgba(124, 181, 236, 0.6)',
+              pointPadding: 0,
+              groupPadding: 0,
+              pointPlacement: 'between'
+          },
+          {
+              name: 'n_genes Scatter',
+              type: 'scatter', // Specifying type for this series
+              data: addJitterBelowXAxis(n_genes_data, -n_genes_variableB, n_genes_variableB),
+              color: 'rgba(124, 181, 236, 0.3)',
+              marker: { radius: 2 }
+          }
+      ]
+  };
 
-  optionsTotalCounts = {
-    chart: { type: 'scatter' },
-    title: { text: 'Total Counts per Cell' },
-    xAxis: { title: { text: 'total_counts' } },
-    yAxis: { title: { text: 'Frequency' } },
-    tooltip: {
-        crosshairs: true, // Enables vertical line on hover
-        formatter: function () {
-            return 'X-axis Value: ' + this.x;
-        }
-    },
-    series: [
-        {
-            type: 'column',
-            name: 'total_counts Distribution',
-            data: total_counts_histogram,
-            color: 'rgba(144, 237, 125, 0.6)',
-            pointPadding: 0,
-            groupPadding: 0,
-            pointPlacement: 'between'
-        },
-        {
-            name: 'total_counts Scatter',
-            type: 'scatter',
-            data: addJitterBelowXAxis(total_counts_data, -total_counts_variableB, total_counts_variableB),
-            color: 'rgba(144, 237, 125, 0.3)',
-            marker: { radius: 2 }
-        }
-    ]
-  }
+    optionsTotalCounts = {
+      chart: { type: 'column' }, // Default chart type can be set here
+      title: { text: 'Total Counts per Cell' },
+      xAxis: { title: { text: 'total_counts' } },
+      yAxis: { title: { text: 'Frequency' } },
+      tooltip: {
+          crosshairs: true, // Enables vertical line on hover
+          formatter: function () {
+              return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
+          }
+      },
+      series: [
+          {
+              name: 'total_counts Distribution',
+              type: 'column', // Specifying type for this series
+              data: total_counts_histogram,
+              color: 'rgba(144, 237, 125, 0.6)',
+              pointPadding: 0,
+              groupPadding: 0,
+              pointPlacement: 'between'
+          },
+          {
+              name: 'total_counts Scatter',
+              type: 'scatter', // Specifying type for this series
+              data: addJitterBelowXAxis(total_counts_data, -total_counts_variableB, total_counts_variableB),
+              color: 'rgba(144, 237, 125, 0.3)',
+              marker: { radius: 2 }
+          }
+      ]
+  };
 
   optionsPCTCounts = {
-    chart: { type: 'scatter' },
+    chart: { type: 'column' }, // Default chart type can be set here
     title: { text: 'Percentage of Mitochondrial Counts per Cell' },
     xAxis: { title: { text: 'pct_counts_mt (%)' } },
     yAxis: { title: { text: 'Frequency' } },
     tooltip: {
         crosshairs: true, // Enables vertical line on hover
         formatter: function () {
-            return 'X-axis Value: ' + this.x;
+            return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
         }
     },
     series: [
         {
-            type: 'column',
             name: 'pct_counts_mt Distribution',
+            type: 'column', // Specifying type for this series
             data: pct_counts_mt_histogram,
             color: 'rgba(255, 188, 117, 0.6)',
             pointPadding: 0,
@@ -133,14 +129,18 @@ const ViolinPlot = ({data}) => {
         },
         {
             name: 'pct_counts_mt Scatter',
-            type: 'scatter',
+            type: 'scatter', // Specifying type for this series
             data: addJitterBelowXAxis(pct_counts_mt_data, -pct_counts_mt_variableB, pct_counts_mt_variableB),
             color: 'rgba(255, 188, 117, 0.3)',
             marker: { radius: 2 }
         }
     ]
-  }}
+  };
+  }
 
+  console.log(optionsNGenes);
+  console.log(optionsTotalCounts);
+  console.log(optionsPCTCounts);
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">
