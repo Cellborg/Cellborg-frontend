@@ -70,7 +70,6 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
       .then(([violinData]) => {
         console.log("violin data:",violinData)
         setJsonData(violinData);
-        setTimeout(10000)
         setIsDataLoading(false);
       })
       .catch(error => {
