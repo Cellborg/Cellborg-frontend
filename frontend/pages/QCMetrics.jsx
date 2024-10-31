@@ -20,7 +20,7 @@ const DynamicFeatureScatterPlot = dynamic(() => import('../components/plots/Feat
 const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => {
   const router = useRouter();
   const { selectedProject } = useProjectContext();
-  const [isDataLoading,setIsDataLoading]=useState(false)
+  const [isDataLoading,setIsDataLoading]=useState(true)
   const [jsonData, setJsonData] = useState(null);
   const [showForm,setShowForm]=useState(false);
   const [count, setCount] = useState({})
@@ -61,8 +61,6 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
     return true;
   }
   useEffect(() => {
-    setIsDataLoading(true);
-  
     const violinPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${datasetId}/plots/QCViolinPlot.json`;
     console.log(`Getting plots 1: ${violinPlotKey} from ${datasetqcBucket}`);
     console.log(datasetId);
@@ -72,6 +70,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
       .then(([violinData]) => {
         console.log("violin data:",violinData)
         setJsonData(violinData);
+        setTimeout(10000)
         setIsDataLoading(false);
       })
       .catch(error => {
@@ -92,10 +91,10 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
   }, [selectedProject, datasetId, router, completed]);
 
 
-  const plots = [
+  const plots = jsonData? [
     <DynamicViolinPlot key={0} plotData={jsonData} className='w-auto'/>,
     <DynamicFeatureScatterPlot key={1} plotData={jsonData} className='w-auto'/>, //highlight points below n above the cutoff
-  ];
+  ]:[];
 
   return (
     <div className="bg-slate-100 h-screen ">
