@@ -25,15 +25,15 @@ function addJitterBelowXAxis(data, yOffset, jitterWidth) {
   return data.map(value => [value, yOffset - (Math.random() * jitterWidth)]);
 }
 
-const ViolinPlot = (data) => {
+const ViolinPlot = ({plotData}) => {
   let optionsNGenes, optionsTotalCounts, optionsPCTCounts;
-  console.log("data", data)
+  console.log("data", plotData)
   
-  if(data) {
-    const n_genes_data = Object.values(data).map(metrics => metrics.n_genes);
+  if(plotData) {
+    const n_genes_data = Object.values(plotData).map(metrics => metrics.n_genes);
     console.log('n_genes_data:', n_genes_data)
-    const total_counts_data = Object.values(data).map(metrics => metrics.total_counts);
-    const pct_counts_mt_data = Object.values(data).map(metrics => metrics.pct_counts_mt);
+    const total_counts_data = Object.values(plotData).map(metrics => metrics.total_counts);
+    const pct_counts_mt_data = Object.values(plotData).map(metrics => metrics.pct_counts_mt);
 
     // Create histogram data with a bin size of your choice
     const n_genes_histogram = createHistogramData(n_genes_data, 50);
