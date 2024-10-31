@@ -47,7 +47,44 @@ const ViolinPlot = ({plotData}) => {
 
     // Chart 1: Histogram and jittered scatter plot for n_genes
     optionsNGenes = {
-      chart: { type: 'column' }, // Default chart type can be set here
+      chart: { 
+        type: 'column',
+        events: {
+          load: function () {
+              const chart = this;
+              // Draw an initial vertical line
+              const initialX = chart.plotLeft + 100; // Initial X position (in pixels)
+              draggableLine = chart.renderer.path(['M', initialX, chart.plotTop, 'L', initialX, chart.plotTop + chart.plotHeight]) // Full height of the plot area
+                  .attr({
+                      'stroke-width': 2,
+                      stroke: 'red',
+                      zIndex: 5
+                  })
+                  .add();
+
+              // Mouse event handlers for dragging
+              Highcharts.addEvent(chart.container, 'mousedown', function (event) {
+                  isDragging = true;
+                  startX = event.chartX; // Store the starting X position
+              });
+
+              Highcharts.addEvent(document, 'mousemove', function (event) {
+                  if (isDragging) {
+                      const deltaX = event.chartX - startX;
+                      const newX = draggableLine.d[1] + deltaX; // Calculate new X position
+                      draggableLine.attr({
+                          d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
+                      });
+                      startX = event.chartX; // Update starting X position for next move
+                  }
+              });
+
+              Highcharts.addEvent(document, 'mouseup', function () {
+                  isDragging = false; // Reset dragging state
+              });
+          }
+      }
+       }, // Default chart type can be set here
       title: { text: 'Number of Genes per Cell' },
       xAxis: { title: { text: 'n_genes' } },
       yAxis: { title: { text: 'Frequency' } },
