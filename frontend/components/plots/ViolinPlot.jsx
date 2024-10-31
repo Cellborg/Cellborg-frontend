@@ -31,6 +31,7 @@ const ViolinPlot = (data) => {
   
   if(data) {
     const n_genes_data = Object.values(data).map(metrics => metrics.n_genes);
+    console.log('n_genes_data:', n_genes_data)
     const total_counts_data = Object.values(data).map(metrics => metrics.total_counts);
     const pct_counts_mt_data = Object.values(data).map(metrics => metrics.pct_counts_mt);
 
@@ -138,10 +139,6 @@ const ViolinPlot = (data) => {
     ]
   };
   }
-
-  console.log(optionsNGenes);
-  console.log(optionsTotalCounts);
-  console.log(optionsPCTCounts);
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">
