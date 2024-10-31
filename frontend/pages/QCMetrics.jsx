@@ -70,6 +70,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
       getPlotData(datasetqcBucket, violinPlotKey),
     ])
       .then(([violinData]) => {
+        console.log("violin data:",violinData)
         setJsonData(violinData);
         setIsDataLoading(false);
       })
