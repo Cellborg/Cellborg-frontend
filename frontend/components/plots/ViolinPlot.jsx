@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from 'highcharts';
 
@@ -27,10 +27,12 @@ function addJitterBelowXAxis(data, yOffset, jitterWidth) {
 
 const ViolinPlot = ({plotData}) => {
   let optionsNGenes, optionsTotalCounts, optionsPCTCounts;
-  let draggableLine; // Variable to hold the line
-  let isDragging = false; // Flag for dragging state
-  let startX;
-  
+
+  let isDragging = false; // State to track dragging
+  let currentLine = null; // Reference to the currently dragged line
+  const dragThreshold = 10;
+
+
   console.log("data", plotData)
   
   if(plotData) {
@@ -56,35 +58,58 @@ const ViolinPlot = ({plotData}) => {
         events: {
           load: function () {
               const chart = this;
-              // Draw an initial vertical line
-              const initialX = chart.plotLeft + 100; // Initial X position (in pixels)
-              draggableLine = chart.renderer.path(['M', initialX, chart.plotTop, 'L', initialX, chart.plotTop + chart.plotHeight]) // Full height of the plot area
+              const initialX1 = chart.plotLeft + 100; // Initial X position for line 1
+              const initialX2 = chart.plotLeft + 200; // Initial X position for line 2
+              
+              // Create the first draggable line
+              const draggableLine1 = chart.renderer.path(['M', initialX1, chart.plotTop, 'L', initialX1, chart.plotTop + chart.plotHeight]) 
                   .attr({
-                      'stroke-width': 2,
-                      stroke: 'red',
+                      'stroke-width': 1,
+                      stroke: 'black',
+                      zIndex: 5
+                  })
+                  .add();
+              
+              // Create the second draggable line
+              const draggableLine2 = chart.renderer.path(['M', initialX2, chart.plotTop, 'L', initialX2, chart.plotTop + chart.plotHeight]) 
+                  .attr({
+                      'stroke-width': 1,
+                      stroke: 'red', // Different color for distinction
                       zIndex: 5
                   })
                   .add();
 
-              // Mouse event handlers for dragging
-              Highcharts.addEvent(chart.container, 'mousedown', function (event) {
-                  isDragging = true;
-                  startX = event.chartX; // Store the starting X position
-              });
+              // Function to check if mouse is close to the line
+              const isMouseNearLine = (lineX, mouseX) => {
+                  return Math.abs(lineX - mouseX) < dragThreshold;
+              };
 
-              Highcharts.addEvent(document, 'mousemove', function (event) {
-                  if (isDragging) {
-                      const deltaX = event.chartX - startX;
-                      const newX = draggableLine.d[1] + deltaX; // Calculate new X position
-                      draggableLine.attr({
+              // Mouse event handlers for dragging
+              const onMouseMove = (event) => {
+                  if (isDragging && currentLine) {
+                      const newX = event.chartX; // Get new X position
+                      currentLine.attr({
                           d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
                       });
-                      startX = event.chartX; // Update starting X position for next move
+                  }
+              };
+
+              Highcharts.addEvent(chart.container, 'mousedown', (event) => {
+                  const mouseX = event.chartX;
+                  if (isMouseNearLine(initialX1, mouseX)) {
+                      isDragging = true; // Set dragging state
+                      currentLine = draggableLine1; // Set current line to line 1
+                  } else if (isMouseNearLine(initialX2, mouseX)) {
+                      isDragging = true; // Set dragging state
+                      currentLine = draggableLine2; // Set current line to line 2
                   }
               });
 
-              Highcharts.addEvent(document, 'mouseup', function () {
+              Highcharts.addEvent(document, 'mousemove', onMouseMove); // Attach move handler
+
+              Highcharts.addEvent(document, 'mouseup', () => {
                   isDragging = false; // Reset dragging state
+                  currentLine = null; // Clear current line reference
               });
           }
       }
