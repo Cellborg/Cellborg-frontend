@@ -27,6 +27,10 @@ function addJitterBelowXAxis(data, yOffset, jitterWidth) {
 
 const ViolinPlot = ({plotData}) => {
   let optionsNGenes, optionsTotalCounts, optionsPCTCounts;
+  let draggableLine; // Variable to hold the line
+  let isDragging = false; // Flag for dragging state
+  let startX;
+  
   console.log("data", plotData)
   
   if(plotData) {
