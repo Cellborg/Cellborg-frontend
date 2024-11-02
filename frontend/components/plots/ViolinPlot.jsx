@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from 'highcharts';
 
@@ -36,118 +36,150 @@ const ViolinPlot = ({plotData}) => {
 
   console.log("data", plotData)
   
-  if(plotData) {
-    const n_genes_data = Object.values(plotData).map(metrics => metrics.n_genes);
-    const total_counts_data = Object.values(plotData).map(metrics => metrics.total_counts);
-    const pct_counts_mt_data = Object.values(plotData).map(metrics => metrics.pct_counts_mt);
+  useEffect(()=>{
+    if(plotData) {
+      const n_genes_data = Object.values(plotData).map(metrics => metrics.n_genes);
+      const total_counts_data = Object.values(plotData).map(metrics => metrics.total_counts);
+      const pct_counts_mt_data = Object.values(plotData).map(metrics => metrics.pct_counts_mt);
 
-    // Create histogram data with a bin size of your choice
-    const n_genes_histogram = createHistogramData(n_genes_data, 50);
-    const total_counts_histogram = createHistogramData(total_counts_data, 500);
-    const pct_counts_mt_histogram = createHistogramData(pct_counts_mt_data, 0.5);
+      // Create histogram data with a bin size of your choice
+      const n_genes_histogram = createHistogramData(n_genes_data, 50);
+      const total_counts_histogram = createHistogramData(total_counts_data, 500);
+      const pct_counts_mt_histogram = createHistogramData(pct_counts_mt_data, 0.5);
 
-    // Calculate variable B (10% of histogram height) for each histogram
-    const n_genes_variableB = calculateVariableB(n_genes_histogram);
-    const total_counts_variableB = calculateVariableB(total_counts_histogram);
-    const pct_counts_mt_variableB = calculateVariableB(pct_counts_mt_histogram);
+      // Calculate variable B (10% of histogram height) for each histogram
+      const n_genes_variableB = calculateVariableB(n_genes_histogram);
+      const total_counts_variableB = calculateVariableB(total_counts_histogram);
+      const pct_counts_mt_variableB = calculateVariableB(pct_counts_mt_histogram);
 
-    // Chart 1: Histogram and jittered scatter plot for n_genes
-    optionsNGenes = {
-      chart: { 
-        type: 'column',
-        events: {
-          load: function () {
-              const chart = this;
-              const initialX1 = chart.plotLeft + 100; // Initial X position for line 1
-              const initialX2 = chart.plotLeft + 200; // Initial X position for line 2
+      // Chart 1: Histogram and jittered scatter plot for n_genes
+      optionsNGenes = {
+        chart: { 
+          type: 'column',
+          events: {
+            load: function () {
+                const chart = this;
+                const initialX1 = chart.plotLeft + 100; // Initial X position for line 1
+                const initialX2 = chart.plotLeft + 200; // Initial X position for line 2
 
-              console.log('init', initialX1)
-              setCountMin(initialX1)
-              // Create the first draggable line
-              const draggableLine1 = chart.renderer.path(['M', initialX1, chart.plotTop, 'L', initialX1, chart.plotTop + chart.plotHeight]) 
-                  .attr({
-                      'stroke-width': 1,
-                      stroke: 'black',
-                      zIndex: 5
-                  })
-                  .add();
-              
-              // Create the second draggable line
-              const draggableLine2 = chart.renderer.path(['M', initialX2, chart.plotTop, 'L', initialX2, chart.plotTop + chart.plotHeight]) 
-                  .attr({
-                      'stroke-width': 1,
-                      stroke: 'red', // Different color for distinction
-                      zIndex: 5
-                  })
-                  .add();
+                console.log('init', initialX1)
+                setCountMin(initialX1)
+                // Create the first draggable line
+                const draggableLine1 = chart.renderer.path(['M', initialX1, chart.plotTop, 'L', initialX1, chart.plotTop + chart.plotHeight]) 
+                    .attr({
+                        'stroke-width': 1,
+                        stroke: 'black',
+                        zIndex: 5
+                    })
+                    .add();
+                
+                // Create the second draggable line
+                const draggableLine2 = chart.renderer.path(['M', initialX2, chart.plotTop, 'L', initialX2, chart.plotTop + chart.plotHeight]) 
+                    .attr({
+                        'stroke-width': 1,
+                        stroke: 'red', // Different color for distinction
+                        zIndex: 5
+                    })
+                    .add();
 
-              // Function to check if mouse is close to the line
-              const isMouseNearLine = (lineX, mouseX) => {
-                  return Math.abs(lineX - mouseX) < dragThreshold;
-              };
+                // Function to check if mouse is close to the line
+                const isMouseNearLine = (lineX, mouseX) => {
+                    return Math.abs(lineX - mouseX) < dragThreshold;
+                };
 
-              // Mouse event handlers for dragging
-              const onMouseMove = (event) => {
-                  if (isDragging && currentLine) {
-                      const newX = event.chartX; // Get new X position
-                      currentLine.attr({
-                          d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
-                      });
-                      if(currentLine == draggableLine1){
-                        console.log('countmin')
-                        //set countmin here
-                      }
-                  }
-              };
+                // Mouse event handlers for dragging
+                const onMouseMove = (event) => {
+                    if (isDragging && currentLine) {
+                        const newX = event.chartX; // Get new X position
+                        currentLine.attr({
+                            d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
+                        });
+                        if(currentLine == draggableLine1){
+                          console.log('countmin')
+                          //set countmin here
+                        }
+                    }
+                };
 
-              Highcharts.addEvent(chart.container, 'mousedown', (event) => {
-                  const mouseX = event.chartX;
-                  if (isMouseNearLine(initialX1, mouseX)) {
-                      console.log('mousedown', countMin)//**use currentX1 not initial
-                      isDragging = true; // Set dragging state
-                      currentLine = draggableLine1; // Set current line to line 1
-                  } else if (isMouseNearLine(initialX2, mouseX)) { //**use currentX2 not initial
-                      isDragging = true; // Set dragging state
-                      currentLine = draggableLine2; // Set current line to line 2
-                  }
-              });
+                Highcharts.addEvent(chart.container, 'mousedown', (event) => {
+                    const mouseX = event.chartX;
+                    if (isMouseNearLine(initialX1, mouseX)) {
+                        console.log('mousedown', countMin)//**use currentX1 not initial
+                        isDragging = true; // Set dragging state
+                        currentLine = draggableLine1; // Set current line to line 1
+                    } else if (isMouseNearLine(initialX2, mouseX)) { //**use currentX2 not initial
+                        isDragging = true; // Set dragging state
+                        currentLine = draggableLine2; // Set current line to line 2
+                    }
+                });
 
-              Highcharts.addEvent(document, 'mousemove', onMouseMove); // Attach move handler
+                Highcharts.addEvent(document, 'mousemove', onMouseMove); // Attach move handler
 
-              Highcharts.addEvent(document, 'mouseup', (event) => {
-                  isDragging = false; // Reset dragging state
-                  currentLine = null; // Clear current line reference
-              });
-          }
-      }
-       }, // Default chart type can be set here
-      title: { text: 'Number of Genes per Cell' },
-      xAxis: { title: { text: 'n_genes' } },
-      yAxis: { title: { text: 'Frequency' } },
-      series: [
-          {
-              name: 'n_genes Distribution',
-              type: 'column', // Specifying type for this series
-              data: n_genes_histogram,
-              color: 'rgba(124, 181, 236, 0.6)',
-              pointPadding: 0,
-              groupPadding: 0,
-              pointPlacement: 'between'
-          },
-          {
-              name: 'n_genes Scatter',
-              type: 'scatter', // Specifying type for this series
-              data: addJitterBelowXAxis(n_genes_data, -n_genes_variableB, n_genes_variableB),
-              color: 'rgba(124, 181, 236, 0.3)',
-              marker: { radius: 2 }
-          }
-      ]
-  };
+                Highcharts.addEvent(document, 'mouseup', (event) => {
+                    isDragging = false; // Reset dragging state
+                    currentLine = null; // Clear current line reference
+                });
+            }
+        }
+        }, // Default chart type can be set here
+        title: { text: 'Number of Genes per Cell' },
+        xAxis: { title: { text: 'n_genes' } },
+        yAxis: { title: { text: 'Frequency' } },
+        series: [
+            {
+                name: 'n_genes Distribution',
+                type: 'column', // Specifying type for this series
+                data: n_genes_histogram,
+                color: 'rgba(124, 181, 236, 0.6)',
+                pointPadding: 0,
+                groupPadding: 0,
+                pointPlacement: 'between'
+            },
+            {
+                name: 'n_genes Scatter',
+                type: 'scatter', // Specifying type for this series
+                data: addJitterBelowXAxis(n_genes_data, -n_genes_variableB, n_genes_variableB),
+                color: 'rgba(124, 181, 236, 0.3)',
+                marker: { radius: 2 }
+            }
+        ]
+    };
 
-    optionsTotalCounts = {
+      optionsTotalCounts = {
+        chart: { type: 'column' }, // Default chart type can be set here
+        title: { text: 'Total Counts per Cell' },
+        xAxis: { title: { text: 'total_counts' } },
+        yAxis: { title: { text: 'Frequency' } },
+        tooltip: {
+            crosshairs: true, // Enables vertical line on hover
+            formatter: function () {
+                return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
+            }
+        },
+        series: [
+            {
+                name: 'total_counts Distribution',
+                type: 'column', // Specifying type for this series
+                data: total_counts_histogram,
+                color: 'rgba(144, 237, 125, 0.6)',
+                pointPadding: 0,
+                groupPadding: 0,
+                pointPlacement: 'between'
+            },
+            {
+                name: 'total_counts Scatter',
+                type: 'scatter', // Specifying type for this series
+                data: addJitterBelowXAxis(total_counts_data, -total_counts_variableB, total_counts_variableB),
+                color: 'rgba(144, 237, 125, 0.3)',
+                marker: { radius: 2 }
+            }
+        ]
+    };
+
+    optionsPCTCounts = {
       chart: { type: 'column' }, // Default chart type can be set here
-      title: { text: 'Total Counts per Cell' },
-      xAxis: { title: { text: 'total_counts' } },
+      title: { text: 'Percentage of Mitochondrial Counts per Cell' },
+      xAxis: { title: { text: 'pct_counts_mt (%)' } },
       yAxis: { title: { text: 'Frequency' } },
       tooltip: {
           crosshairs: true, // Enables vertical line on hover
@@ -157,55 +189,25 @@ const ViolinPlot = ({plotData}) => {
       },
       series: [
           {
-              name: 'total_counts Distribution',
+              name: 'pct_counts_mt Distribution',
               type: 'column', // Specifying type for this series
-              data: total_counts_histogram,
-              color: 'rgba(144, 237, 125, 0.6)',
+              data: pct_counts_mt_histogram,
+              color: 'rgba(255, 188, 117, 0.6)',
               pointPadding: 0,
               groupPadding: 0,
               pointPlacement: 'between'
           },
           {
-              name: 'total_counts Scatter',
+              name: 'pct_counts_mt Scatter',
               type: 'scatter', // Specifying type for this series
-              data: addJitterBelowXAxis(total_counts_data, -total_counts_variableB, total_counts_variableB),
-              color: 'rgba(144, 237, 125, 0.3)',
+              data: addJitterBelowXAxis(pct_counts_mt_data, -pct_counts_mt_variableB, pct_counts_mt_variableB),
+              color: 'rgba(255, 188, 117, 0.3)',
               marker: { radius: 2 }
           }
-      ]
-  };
-
-  optionsPCTCounts = {
-    chart: { type: 'column' }, // Default chart type can be set here
-    title: { text: 'Percentage of Mitochondrial Counts per Cell' },
-    xAxis: { title: { text: 'pct_counts_mt (%)' } },
-    yAxis: { title: { text: 'Frequency' } },
-    tooltip: {
-        crosshairs: true, // Enables vertical line on hover
-        formatter: function () {
-            return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
-        }
-    },
-    series: [
-        {
-            name: 'pct_counts_mt Distribution',
-            type: 'column', // Specifying type for this series
-            data: pct_counts_mt_histogram,
-            color: 'rgba(255, 188, 117, 0.6)',
-            pointPadding: 0,
-            groupPadding: 0,
-            pointPlacement: 'between'
-        },
-        {
-            name: 'pct_counts_mt Scatter',
-            type: 'scatter', // Specifying type for this series
-            data: addJitterBelowXAxis(pct_counts_mt_data, -pct_counts_mt_variableB, pct_counts_mt_variableB),
-            color: 'rgba(255, 188, 117, 0.3)',
-            marker: { radius: 2 }
-        }
-    ]
-  };
-  }
+        ]
+      };
+    }  
+  }, [plotData]);
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">
