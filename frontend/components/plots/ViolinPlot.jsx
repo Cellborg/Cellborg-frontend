@@ -32,6 +32,8 @@ const ViolinPlot = ({plotData}) => {
   let currentLine = null; // Reference to the currently dragged line
   const dragThreshold = 10;
 
+  const [countMin, setCountMin] = useState(0);
+  const [countMax, setCountMax] = useState(0);
 
   console.log("data", plotData)
   
@@ -58,11 +60,11 @@ const ViolinPlot = ({plotData}) => {
         events: {
           load: function () {
               const chart = this;
-              const initialX1 = chart.plotLeft + 100; // Initial X position for line 1
-              const initialX2 = chart.plotLeft + 200; // Initial X position for line 2
+              setCountMin(chart.plotLeft + 100); // Initial X position for line 1
+              setCountMax(chart.plotLeft + 200); // Initial X position for line 2
               
               // Create the first draggable line
-              const draggableLine1 = chart.renderer.path(['M', initialX1, chart.plotTop, 'L', initialX1, chart.plotTop + chart.plotHeight]) 
+              const draggableLine1 = chart.renderer.path(['M', countMin, chart.plotTop, 'L', countMin, chart.plotTop + chart.plotHeight]) 
                   .attr({
                       'stroke-width': 1,
                       stroke: 'black',
@@ -71,7 +73,7 @@ const ViolinPlot = ({plotData}) => {
                   .add();
               
               // Create the second draggable line
-              const draggableLine2 = chart.renderer.path(['M', initialX2, chart.plotTop, 'L', initialX2, chart.plotTop + chart.plotHeight]) 
+              const draggableLine2 = chart.renderer.path(['M', countMax, chart.plotTop, 'L', countMax, chart.plotTop + chart.plotHeight]) 
                   .attr({
                       'stroke-width': 1,
                       stroke: 'red', // Different color for distinction
@@ -91,15 +93,21 @@ const ViolinPlot = ({plotData}) => {
                       currentLine.attr({
                           d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
                       });
-                  }
+                      if(currentLine == draggableLine1){
+                        setCountMin(newX);
+                      }
+                      else if(currentLine == draggableLine2){
+                        setCountMax(newX);
+                      }
+                  } 
               };
 
               Highcharts.addEvent(chart.container, 'mousedown', (event) => {
                   const mouseX = event.chartX;
-                  if (isMouseNearLine(initialX1, mouseX)) {//**use currentX1 not initial
+                  if (isMouseNearLine(countMin, mouseX)) {//**use currentX1 not initial
                       isDragging = true; // Set dragging state
                       currentLine = draggableLine1; // Set current line to line 1
-                  } else if (isMouseNearLine(initialX2, mouseX)) { //**use currentX2 not initial
+                  } else if (isMouseNearLine(countMax, mouseX)) { //**use currentX2 not initial
                       isDragging = true; // Set dragging state
                       currentLine = draggableLine2; // Set current line to line 2
                   }
