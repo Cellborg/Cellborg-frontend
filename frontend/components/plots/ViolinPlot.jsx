@@ -93,12 +93,17 @@ const ViolinPlot = ({plotData}) => {
                       currentLine.attr({
                           d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
                       });
+                      if(currentLine == draggableLine1){
+                        console.log('countmin')
+                        //set countmin here
+                      }
                   }
               };
 
               Highcharts.addEvent(chart.container, 'mousedown', (event) => {
                   const mouseX = event.chartX;
-                  if (isMouseNearLine(initialX1, mouseX)) {//**use currentX1 not initial
+                  if (isMouseNearLine(initialX1, mouseX)) {
+                      console.log('mousedown', countMin)//**use currentX1 not initial
                       isDragging = true; // Set dragging state
                       currentLine = draggableLine1; // Set current line to line 1
                   } else if (isMouseNearLine(initialX2, mouseX)) { //**use currentX2 not initial
