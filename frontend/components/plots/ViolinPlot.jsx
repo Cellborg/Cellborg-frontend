@@ -39,7 +39,6 @@ const ViolinPlot = ({plotData}) => {
   
   if(plotData) {
     const n_genes_data = Object.values(plotData).map(metrics => metrics.n_genes);
-    console.log('n_genes_data:', n_genes_data)
     const total_counts_data = Object.values(plotData).map(metrics => metrics.total_counts);
     const pct_counts_mt_data = Object.values(plotData).map(metrics => metrics.pct_counts_mt);
 
@@ -102,7 +101,7 @@ const ViolinPlot = ({plotData}) => {
 
               Highcharts.addEvent(chart.container, 'mousedown', (event) => {
                   const mouseX = event.chartX;
-                  if (isMouseNearLine(countMin, mouseX)) {//**use currentX1 not initial
+                  if (isMouseNearLine(initialX1, mouseX)) {//**use currentX1 not initial
                       console.log('mousedown',countMin)
                       isDragging = true; // Set dragging state
                       currentLine = draggableLine1; // Set current line to line 1
