@@ -110,8 +110,6 @@ const ViolinPlot = ({plotData}) => {
               Highcharts.addEvent(document, 'mousemove', onMouseMove); // Attach move handler
 
               Highcharts.addEvent(document, 'mouseup', (event) => {
-                  setCountMin(event.chartX)
-                  console.log(event.chartX)
                   isDragging = false; // Reset dragging state
                   currentLine = null; // Clear current line reference
               });
