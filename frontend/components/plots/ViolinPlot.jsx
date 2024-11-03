@@ -28,12 +28,6 @@ function addJitterBelowXAxis(data, yOffset, jitterWidth) {
 const ViolinPlot = ({plotData}) => {
   let optionsNGenes, optionsTotalCounts, optionsPCTCounts;
 
-  let isDragging = false; // State to track dragging
-  let currentLine = null; // Reference to the currently dragged line
-  const dragThreshold = 10;
-
-  let countMin = 0;
-
   console.log("data", plotData)
   
   useEffect(()=>{
@@ -54,77 +48,16 @@ const ViolinPlot = ({plotData}) => {
 
       // Chart 1: Histogram and jittered scatter plot for n_genes
       optionsNGenes = {
-        chart: { 
-          type: 'column',
-          events: {
-            load: function () {
-                const chart = this;
-                const initialX1 = chart.plotLeft + 100; // Initial X position for line 1
-                const initialX2 = chart.plotLeft + 200; // Initial X position for line 2
-
-                console.log('init', initialX1)
-                countMin = initialX1;
-                // Create the first draggable line
-                const draggableLine1 = chart.renderer.path(['M', initialX1, chart.plotTop, 'L', initialX1, chart.plotTop + chart.plotHeight]) 
-                    .attr({
-                        'stroke-width': 1,
-                        stroke: 'black',
-                        zIndex: 5
-                    })
-                    .add();
-                
-                // Create the second draggable line
-                const draggableLine2 = chart.renderer.path(['M', initialX2, chart.plotTop, 'L', initialX2, chart.plotTop + chart.plotHeight]) 
-                    .attr({
-                        'stroke-width': 1,
-                        stroke: 'red', // Different color for distinction
-                        zIndex: 5
-                    })
-                    .add();
-
-                // Function to check if mouse is close to the line
-                const isMouseNearLine = (lineX, mouseX) => {
-                    return Math.abs(lineX - mouseX) < dragThreshold;
-                };
-
-                // Mouse event handlers for dragging
-                const onMouseMove = (event) => {
-                    if (isDragging && currentLine) {
-                        const newX = event.chartX; // Get new X position
-                        currentLine.attr({
-                            d: ['M', newX, chart.plotTop, 'L', newX, chart.plotTop + chart.plotHeight]
-                        });
-                        if(currentLine == draggableLine1){
-                          console.log('countmin')
-                          //set countmin here
-                        }
-                    }
-                };
-
-                Highcharts.addEvent(chart.container, 'mousedown', (event) => {
-                    const mouseX = event.chartX;
-                    if (isMouseNearLine(initialX1, mouseX)) {
-                        console.log('mousedown', countMin)//**use currentX1 not initial
-                        isDragging = true; // Set dragging state
-                        currentLine = draggableLine1; // Set current line to line 1
-                    } else if (isMouseNearLine(initialX2, mouseX)) { //**use currentX2 not initial
-                        isDragging = true; // Set dragging state
-                        currentLine = draggableLine2; // Set current line to line 2
-                    }
-                });
-
-                Highcharts.addEvent(document, 'mousemove', onMouseMove); // Attach move handler
-
-                Highcharts.addEvent(document, 'mouseup', () => {
-                    isDragging = false; // Reset dragging state
-                    currentLine = null; // Clear current line reference
-                });
-            }
-        }
-        }, // Default chart type can be set here
+        chart: { type: 'column'}, // Default chart type can be set here
         title: { text: 'Number of Genes per Cell' },
         xAxis: { title: { text: 'n_genes' } },
         yAxis: { title: { text: 'Frequency' } },
+        tooltip: {
+          crosshairs: true, // Enables vertical line on hover
+          formatter: function () {
+              return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
+          }
+        },
         series: [
             {
                 name: 'n_genes Distribution',
