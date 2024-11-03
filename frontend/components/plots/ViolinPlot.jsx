@@ -32,7 +32,7 @@ const ViolinPlot = ({plotData}) => {
   let currentLine = null; // Reference to the currently dragged line
   const dragThreshold = 10;
 
-  const [countMin, setCountMin] = useState(0)
+  let countMin = 0;
 
   console.log("data", plotData)
   
@@ -63,7 +63,7 @@ const ViolinPlot = ({plotData}) => {
                 const initialX2 = chart.plotLeft + 200; // Initial X position for line 2
 
                 console.log('init', initialX1)
-                setCountMin(initialX1)
+                countMin = initialX1;
                 // Create the first draggable line
                 const draggableLine1 = chart.renderer.path(['M', initialX1, chart.plotTop, 'L', initialX1, chart.plotTop + chart.plotHeight]) 
                     .attr({
@@ -115,7 +115,7 @@ const ViolinPlot = ({plotData}) => {
 
                 Highcharts.addEvent(document, 'mousemove', onMouseMove); // Attach move handler
 
-                Highcharts.addEvent(document, 'mouseup', (event) => {
+                Highcharts.addEvent(document, 'mouseup', () => {
                     isDragging = false; // Reset dragging state
                     currentLine = null; // Clear current line reference
                 });
