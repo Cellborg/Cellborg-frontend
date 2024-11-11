@@ -174,11 +174,9 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
               <button
                 className="rounded-md bg-blue text-white px-10 py-4 text-lg font-bold hover:bg-blue/70 transition ease-in-out duration-100"
                 onClick={() => {
-                  completed && checkMinsAndMaxs()? 
-                    //function that makes qc request with all vars and flag and pushes QCDoublets
-                    handleFinishMetrics(selectedProject.user, selectedProject.project_id, datasetId, count, gene, mito,router, token):
-                    handleInvalidInput()
-                    //handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token)
+                  if(completed && checkMinsAndMaxs()){
+                    handleFinishMetrics(selectedProject.user, selectedProject.project_id, datasetId, count, gene, mito,router, token)
+                  }
                 }}
               >
                 Finish Metrics for {datasetName}
