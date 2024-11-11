@@ -17,7 +17,6 @@ async function handleFinishQC(user, project, dataset, router, token) {
       });
       if (response.ok) {
         console.log("Successfully cleaned up QC", response);
-        router.push('/dashboard');
       } else {
         console.error('Failed to clean up QC.', response);
       }

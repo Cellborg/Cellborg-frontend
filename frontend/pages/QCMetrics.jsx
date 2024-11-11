@@ -33,7 +33,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
   async function handleFinishMetrics(user, project, dataset, count, gene, mito, router, token){
     const response = await performQCDoublets(user, project, dataset, count, gene, mito, token);
     if(response){
-      handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token);
+      await handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token);
       router.push(`/loading?task=${response.taskArn}&dataset=${dataset}&name=${null}&species=${selectedProject.species}`)
     }
     /**
