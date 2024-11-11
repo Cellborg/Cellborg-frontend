@@ -27,8 +27,8 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
   const [jsonData, setJsonData] = useState(null);
   const [showForm,setShowForm]=useState(false);
   const count = useRef({'max':null, 'min':null})
-  const [gene, setGene] = useState({})
-  const [mito, setMito]=useState({})
+  const gene = useRef({'max':null,'min':null})
+  const mito = useRef({'max':null,'min':null})
 
   async function handleFinishMetrics(user, project, dataset, count, gene, mito, router, token){
     const response = await performQCDoublets(user, project, dataset, count, gene, mito, token);
@@ -146,28 +146,28 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
               type='number' 
               classname=''
               min='0'
-              onChange={(e)=>{setGene({...gene, max:e.target.value})}}
+              ref={gene['max']}
               />  
               <h1>Gene Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e)=>{setGene({...gene, min:e.target.value})}}
+              ref={gene['min']}
               /> 
               <h1>Mito Max</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e)=>{setMito({...mito, max:e.target.value})}}
+              ref={mito['max']}
               /> 
               <h1>Mito Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e)=>{setMito({...mito, min:e.target.value})}}
+              ref={mito['min']}
               /> 
             </div>
             <div className='flex items-center justify-center mt-1'>
