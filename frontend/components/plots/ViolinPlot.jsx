@@ -27,11 +27,9 @@ function addJitterBelowXAxis(data, yOffset, jitterWidth) {
 
 const ViolinPlot = ({plotData}) => {
   let optionsNGenes, optionsTotalCounts, optionsPCTCounts;
-  console.log("data", plotData)
   
   if(plotData) {
     const n_genes_data = Object.values(plotData).map(metrics => metrics.n_genes);
-    console.log('n_genes_data:', n_genes_data)
     const total_counts_data = Object.values(plotData).map(metrics => metrics.total_counts);
     const pct_counts_mt_data = Object.values(plotData).map(metrics => metrics.pct_counts_mt);
 

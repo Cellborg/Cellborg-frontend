@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { getSession } from 'next-auth/react';
 import {MutatingDots} from 'react-loader-spinner';
@@ -14,7 +14,10 @@ import BugReportForm from '../components/BugReportForm.jsx';
 import { GoReport } from "react-icons/go";
 import {performQCDoublets} from '../components/utils/mongoClient.mjs';
 
-const DynamicViolinPlot = dynamic(() => import('../components/plots/ViolinPlot.jsx'), {ssr: false});
+const DynamicViolinPlot = dynamic(() => import('../components/plots/ViolinPlot.jsx'), {
+  ssr: false,
+  loading: () => <div>Loading Violin Plot...</div>,
+});
 const DynamicFeatureScatterPlot = dynamic(() => import('../components/plots/FeatureScatterPlot.jsx'), {ssr: false});
 
 const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => {
@@ -23,7 +26,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
   const [isDataLoading,setIsDataLoading]=useState(true)
   const [jsonData, setJsonData] = useState(null);
   const [showForm,setShowForm]=useState(false);
-  const [count, setCount] = useState({})
+  const count = useRef({'max':null, 'min':null})
   const [gene, setGene] = useState({})
   const [mito, setMito]=useState({})
 
@@ -129,14 +132,14 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
               type='number' 
               min='0'
               classname=''
-              onChange={(e)=>{setCount({...count, max:e.target.value})}}
+              ref={count['max']}
               />
               <h1>Count Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e)=>{setCount({...count, min:e.target.value})}}
+              ref = {count['min']} 
               />
               <h1>Gene Max</h1>
               <input 
