@@ -45,6 +45,9 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
     alert("either invalid input or something went wrong in pre-plot")
   }
   function checkMinsAndMaxs(){
+    console.log('counts: ', count)
+    console.log('gene: ', gene)
+    console.log('mito: ', mito)
     //check if user chose max and min for count
     if(Object.keys(count).length <2){
       return false;
