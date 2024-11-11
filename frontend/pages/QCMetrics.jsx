@@ -45,23 +45,26 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
     alert("either invalid input or something went wrong in pre-plot")
   }
   function checkMinsAndMaxs(){
-    console.log('counts: ', count)
-    console.log('gene: ', gene)
-    console.log('mito: ', mito)
+    const currCount = count.current;
+    const currGene = gene.current;
+    const currMito  = mito.current;
+    console.log('counts: ', currCount)
+    console.log('gene: ', gene.current)
+    console.log('mito: ', mito.current)
     //check if user chose max and min for count
-    if(Object.keys(count).length <2){
+    if(Object.keys(currCount).length <2){
       return false;
     }
     //check if user chose max and min for gene
-    else if(Object.keys(gene).length <2){
+    else if(Object.keys(currGene).length <2){
       return false
     }
     //check if user chose max and min for mito
-    else if(Object.keys(mito).length <2){
+    else if(Object.keys(currMito).length <2){
       return false
     }
     //check for negative values
-    else if(count.min<0 || count.max<0 || gene.min<0 || gene.max <0 || mito.max<0 || mito.min<0){
+    else if(currCount.min<0 || currCount.max<0 || currGene.min<0 || currGene.max <0 || currMito.max<0 || currMito.min<0){
       return false;
     }
     return true;
@@ -135,42 +138,42 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
               type='number' 
               min='0'
               classname=''
-              ref={count['max']}
+              onChange={(e) => (count.current.max = e.target.value)}
               />
               <h1>Count Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              ref = {count['min']} 
+              onChange={(e) => (count.current.min = e.target.value)}
               />
               <h1>Gene Max</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              ref={gene['max']}
+              onChange={(e) => (gene.current.max = e.target.value)}
               />  
               <h1>Gene Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              ref={gene['min']}
+              onChange={(e) => (gene.current.min = e.target.value)}
               /> 
               <h1>Mito Max</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              ref={mito['max']}
+              onChange={(e) => (mito.current.max = e.target.value)}
               /> 
               <h1>Mito Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              ref={mito['min']}
+              onChange={(e) => (mito.current.min = e.target.value)}
               /> 
             </div>
             <div className='flex items-center justify-center mt-1'>
@@ -178,7 +181,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
                 className="rounded-md bg-blue text-white px-10 py-4 text-lg font-bold hover:bg-blue/70 transition ease-in-out duration-100"
                 onClick={() => {
                   if(completed && checkMinsAndMaxs()){
-                    handleFinishMetrics(selectedProject.user, selectedProject.project_id, datasetId, count, gene, mito,router, token)
+                    handleFinishMetrics(selectedProject.user, selectedProject.project_id, datasetId, count.current, gene.current, mito.current,router, token)
                   }
                 }}
               >
