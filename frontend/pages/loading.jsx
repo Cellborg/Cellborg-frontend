@@ -71,6 +71,7 @@ const Loading = ({data: token}) => {
           console.log(`no need to update, dataset ${dataset} already complete`)
       }
       //router.push(`/QCDoublets?datasetId=${dataset}&datasetName=${name}&completed=${true}`)
+      //clean up QC Task here
       router.push('/dashboard')
     })
     return () => {
