@@ -32,12 +32,14 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
 
   async function handleFinishMetrics(user, project, dataset, count, gene, mito, router, token){
     const response = await performQCDoublets(user, project, dataset, count, gene, mito, token);
+    print(response)
     if(response){
       //await handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token);
       //need to call handleFinishQC once sns message is sent from task or something
 
       //find corresponding species for selected dataset else empty
       const species = selectedProject.datasets.find(dataset => dataset.dataset_id === datasetId)?.species || undefined;
+      
       router.push(`/loading?task=${response.taskArn}&dataset=${dataset}&name=${null}&species=${species}`)
     }
     /**
@@ -142,42 +144,42 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
               type='number' 
               min='0'
               classname=''
-              onChange={(e) => (count.current.max = e.target.value)}
+              onChange={(e) => (count.current.max = Number(e.target.value))}
               />
               <h1>Count Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e) => (count.current.min = e.target.value)}
+              onChange={(e) => (count.current.min = Number(e.target.value))}
               />
               <h1>Gene Max</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e) => (gene.current.max = e.target.value)}
+              onChange={(e) => (gene.current.max = Number(e.target.value))}
               />  
               <h1>Gene Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e) => (gene.current.min = e.target.value)}
+              onChange={(e) => (gene.current.min = Number(e.target.value))}
               /> 
               <h1>Mito Max</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e) => (mito.current.max = e.target.value)}
+              onChange={(e) => (mito.current.max = Number(e.target.value))}
               /> 
               <h1>Mito Min</h1>
               <input 
               type='number' 
               classname=''
               min='0'
-              onChange={(e) => (mito.current.min = e.target.value)}
+              onChange={(e) => (mito.current.min = Number(e.target.value))}
               /> 
             </div>
             <div className='flex items-center justify-center mt-1'>
