@@ -48,6 +48,8 @@ const Loading = ({data: token}) => {
             set('cachedProjects', projectList)
 
             //update mongo
+            console.log('pro id hereee: ', project)
+            console.log('proj idx thing heree: ', projectList[projIdx])
             const response = await updateProject(project, projectList[projIdx],token)
             console.log(`dataset ${dataset} marked prePlot`)
         }
