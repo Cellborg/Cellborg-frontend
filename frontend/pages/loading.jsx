@@ -8,7 +8,7 @@ import { useProjectContext } from '../components/utils/projectContext';
 import { performQCMetricsPrePlot} from '../components/utils/mongoClient.mjs';
 import { SpeciesToMt } from '../constants.js';
 import cookie from "cookie";
-import { get } from 'idb-keyval'
+import { get, set } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
 import { handleFinishQC } from '../components/utils/qcClient.mjs';
 import { updateProject } from '../components/utils/mongoClient.mjs';
@@ -77,7 +77,7 @@ const Loading = ({data: token}) => {
 
           //update mongo project
           const response = await updateProject(project, projectList[projIdx])
-          
+
           console.log(`dataset ${dataset} marked complete`);
       }
       else {
