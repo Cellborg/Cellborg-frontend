@@ -32,7 +32,7 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
 
   async function handleFinishMetrics(user, project, dataset, count, gene, mito, router, token){
     const response = await performQCDoublets(user, project, dataset, count, gene, mito, token);
-    print(response)
+    console.log(response)
     if(response){
       //await handleFinishQC(selectedProject.user, selectedProject.project_id, datasetId, router, token);
       //need to call handleFinishQC once sns message is sent from task or something
