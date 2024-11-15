@@ -10,6 +10,8 @@ import { SpeciesToMt } from '../constants.js';
 import cookie from "cookie";
 import { get } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
+import { handleFinishQC } from '../components/utils/qcClient.mjs';
+import { updateProject } from '../components/utils/mongoClient.mjs';
 import { GoReport } from "react-icons/go";
 import {SESSION_COOKIE} from '../constants'
 
@@ -42,6 +44,11 @@ const Loading = ({data: token}) => {
             projectList[projIdx].datasets[dataIdx].status ="prePlot";
             setProjects(projectList);
             setSelectedProject(projectList[projIdx]);
+            //set cache status
+            set('cachedProjects', projectList)
+
+            //update mongo
+            const response = await updateProject(project, projectList[projIdx])
             console.log(`dataset ${dataset} marked prePlot`)
         }
         else {
@@ -65,6 +72,12 @@ const Loading = ({data: token}) => {
           projectList[projIdx].datasets[dataIdx].status ="complete";
           setProjects(projectList);
           setSelectedProject(projectList[projIdx]);
+          //set cache status
+          set('cachedProjects', projectList)
+
+          //update mongo project
+          const response = await updateProject(project, projectList[projIdx])
+          
           console.log(`dataset ${dataset} marked complete`);
       }
       else {
@@ -72,6 +85,7 @@ const Loading = ({data: token}) => {
       }
       //router.push(`/QCDoublets?datasetId=${dataset}&datasetName=${name}&completed=${true}`)
       //clean up QC Task here
+      const response = await handleFinishQC(selectedProject.user, selectedProject.project_id, dataset, router, token);
       router.push('/dashboard')
     })
     return () => {
