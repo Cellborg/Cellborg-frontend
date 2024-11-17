@@ -92,6 +92,7 @@ const Loading = ({data: token}) => {
     return () => {
         socket.disconnect();
     };
+    
 }, [projects, selectedProject, router, setProjects, setSelectedProject, name]);
 
   useEffect(() => {

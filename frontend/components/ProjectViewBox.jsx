@@ -113,6 +113,25 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
     /**
      * @param {}
      * @returns
+     * begins processing and annotations run
+     * USE-CASE: user clicks pa button after qc
+     */
+    async function handlePARun(){
+        try{
+            //retrieves dataset-ID's
+            const datasetIDs = selectedProject.datasets.map(dataset => dataset.dataset_id);
+            console.log("Datasets: ", datasetIDs);
+            
+            //push user to loading page, reuse qc loading cause no need to create a new one
+            pageRouter.push("/loading");
+            //const res = await beginPA() // presumably start pa
+        }catch(error){
+            console.log("Error running analysis: ", error);
+        }
+    }
+    /**
+     * @param {}
+     * @returns
      * begins analysis run
      * USE-CASE: user clicks Run on existing project
      */
@@ -410,17 +429,20 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                             ) : (
                             <div className='mt-5 mb-10' text-white="true">No Datasets Uploaded</div>
                         )}
+
                      <div className="bottom-0 flex justify-start mt-5">
                         <button className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' onClick={handleEdit}>Edit</button>
+                        
                         <button 
                             className={`border px-2 py-1 m-2 rounded-md ${qcCompleted() ? 'hover:bg-cyan' : 'bg-gray-400 cursor-not-allowed'}`} 
-                            onClick={handleRun} 
+                            onClick={handlePARun} 
                             disabled={!qcCompleted()}
                         >
-                            Run
+                            Run Processing and Annotations
                         </button>
                         <button className='border px-2 py-1 m-2 bg-red-400 rounded-md hover:bg-red-400/50' onClick={saveDeleted}>Delete Project</button>
                     </div>
+
                     <div className='mt-5 font-bold text-blue'> Runs:</div>
                         {selectedProject.runs && selectedProject.runs.length > 0 ? (
                             <div 

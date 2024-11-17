@@ -32,6 +32,8 @@ export const heatmapBucket = (ENVVV === "dev") ? "cellborgheatmapbucket" : `cell
 //pages/Doublets.jsx
 export const qccleaupURL=`${API_URL}/api/qc/qualityControlCleanUp`;
 
+export const paCleanupURL = `${API_URL}/api/pa/paCleanUp`;
+
 //pages/AnalysisOptions.jsx
 export const analysisCleanUpURL=`${API_URL}/api/analysis/analysisCleanUp`;
 

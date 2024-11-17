@@ -1,4 +1,4 @@
-import {qccleaupURL, analysisCleanUpURL} from '../../constants.js';
+import {qccleaupURL, analysisCleanUpURL, paCleanupURL} from '../../constants.js';
 
 async function handleFinishQC(user, project, dataset, router, token) {
     try {
@@ -25,6 +25,29 @@ async function handleFinishQC(user, project, dataset, router, token) {
     }
   }
 
+async function handleFinishPA(user, project, router, token){
+  try{
+    const requestBody = {
+      user: user,
+      project: project,
+    };
+    const response = await fetch(paCleanupURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization':`Bearer ${token}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if(response.ok) {
+      console.log("Successfully cleaned up PA", response);
+    }else {
+      console.error('Failed to clean up PA', response);
+    }
+  }catch(error){
+    console.error('An error occurred:', error);
+  }
+}
 async function handleFinishAnalysis(user, project, analysisId, router, token) {
     try {
       const requestBody = {
