@@ -102,22 +102,23 @@ const Loading = ({data: token}) => {
             body: JSON.stringify({taskArn: task})
         });
         const data = await response.json();
+        console.log('checkTaskStatus response: ',data)
         if (data.ready === true) { 
             setIsLoading(false);
 
             //means checking qc
-            if(URL = checkQCTaskStatusURL){
+            if(URL == checkQCTaskStatusURL){
               const mt = SpeciesToMt[species]
               console.log("mt from dataset: ",mt)
               console.log("species associated with datatset: ", species)
-              const response = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
+              const QCresponse = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
               // performQCMetrics endpoint 
-              console.log('Response for perform qc metrics is:', response);
-            }else if(URL = checkPATaskStatusURL){//means checking pa
+              console.log('Response for perform qc metrics is:', QCresponse);
+            }else if(URL == checkPATaskStatusURL){//means checking pa
               //create list of datasets
               const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
-              const repsonse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
-              console.log('Response for starting pa is: ', response);
+              const PAresponse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
+              console.log('Response for starting pa is: ', PAresponse);
             }
         }
         else if(data.ready === false) {
