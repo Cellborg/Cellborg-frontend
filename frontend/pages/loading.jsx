@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import {checkTaskStatusURL} from '../constants.js';
+import {checkQCTaskStatusURL, checkPATaskStatusURL} from '../constants.js';
 import {MutatingDots} from 'react-loader-spinner'; 
 import io from 'socket.io-client';
 import {socketio} from '../constants.js';
 import { useProjectContext } from '../components/utils/projectContext';
-import { performQCMetricsPrePlot} from '../components/utils/mongoClient.mjs';
+import { performQCMetricsPrePlot, beginPA} from '../components/utils/mongoClient.mjs';
 import { SpeciesToMt } from '../constants.js';
 import cookie from "cookie";
 import { get, set } from 'idb-keyval'
@@ -30,18 +30,15 @@ const Loading = ({data: token}) => {
     console.log("Emitting register connection for", selectedProject, selectedProject.user);
     socket.emit('RegisterConnection', selectedProject.user);
 
-    //for QC pre-plot 
-    socket.on('QC_Pre_Plot_Complete', async (data) => {
-        const { user, project, dataset, stage} = data;   
-        console.log("QC completed for:", data);
-        const projectList = await get('cachedProjects');
+    const updateProjectStatus = async(project,dataset, stage)=>{
+      const projectList = await get('cachedProjects');
         console.log("project list:", projectList)
         const projIdx = projectList.findIndex(p => p.project_id == project);
         console.log(projIdx)
         const dataIdx = projectList[projIdx].datasets.findIndex(d => d.dataset_id === dataset);
 
-        if (projectList[projIdx].datasets[dataIdx].status !== "prePlot") {
-            projectList[projIdx].datasets[dataIdx].status ="prePlot";
+        if (projectList[projIdx].datasets[dataIdx].status !== stage) {
+            projectList[projIdx].datasets[dataIdx].status =stage;
             setProjects(projectList);
             setSelectedProject(projectList[projIdx]);
             //set cache status
@@ -50,11 +47,18 @@ const Loading = ({data: token}) => {
             //update mongo
             
             const response = await updateProject(projectList[projIdx]._id, projectList[projIdx],token)
-            console.log(`dataset ${dataset} marked prePlot`)
+            console.log(`dataset ${dataset} marked ${stage}`)
         }
         else {
-            console.log(`no need to update, dataset ${dataset} already prePlotted`)
+            console.log(`no need to update, dataset ${dataset} already ${stage}`)
         }
+    }
+    //for QC pre-plot 
+    socket.on('QC_Pre_Plot_Complete', async (data) => {
+        const { user, project, dataset, stage} = data;   
+        console.log("QC completed for:", data);
+        updateProjectStatus(project,dataset,stage);
+        
         router.push(`/QCMetrics?datasetId=${dataset}&datasetName=${name}&completed=${true}`);
     });
 
@@ -62,33 +66,22 @@ const Loading = ({data: token}) => {
     socket.on('QC_Doublet_Complete', async(data)=>{
       const {user, project, dataset} = data;
       console.log("QC Doublets finished for: ", data);
+      updateProjectStatus(project,dataset,'complete');
 
-      const projectList = await get('cachedProjects');
-      console.log("project list:", projectList)
-      const projIdx = projectList.findIndex(p => p.project_id == project);
-      console.log(projIdx);
-      const dataIdx = projectList[projIdx].datasets.findIndex(d => d.dataset_id === dataset);
-
-      if (projectList[projIdx].datasets[dataIdx].status !== "complete") {
-          projectList[projIdx].datasets[dataIdx].status ="complete";
-          setProjects(projectList);
-          setSelectedProject(projectList[projIdx]);
-          //set cache status
-          set('cachedProjects', projectList)
-
-          //update mongo project
-          const response = await updateProject(projectList[projIdx]._id, projectList[projIdx],token)
-
-          console.log(`dataset ${dataset} marked complete`);
-      }
-      else {
-          console.log(`no need to update, dataset ${dataset} already complete`)
-      }
       //router.push(`/QCDoublets?datasetId=${dataset}&datasetName=${name}&completed=${true}`)
       //clean up QC Task here
       const response = await handleFinishQC(selectedProject.user, selectedProject.project_id, dataset, router, token);
       router.push('/dashboard')
+    },
+    //beingPA socket notification
+    socket.on('PA_Initialize_Project', async(data)=>{
+        const {user, project, stage} = data;
+
+        console.log(`PA ${stage} had been completed on project ${project} for ${user}`);
+        router.push('/cluster');
     })
+  
+  )
     return () => {
         socket.disconnect();
     };
@@ -98,9 +91,9 @@ const Loading = ({data: token}) => {
   useEffect(() => {
   
     //move to the api beginqualitycontril endpoint function itself
-    const checkTaskStatus = async () => {
+    const checkTaskStatus = async (URL) => {
       try {
-        const response = await fetch(checkTaskStatusURL, {
+        const response = await fetch(URL, {
             method: 'POST',
             headers: {
               'Content-Type' : 'application/json',
@@ -112,14 +105,20 @@ const Loading = ({data: token}) => {
         if (data.ready === true) { 
             setIsLoading(false);
 
-            //TODO: make req in dashboard 
-
-            const mt = SpeciesToMt[species]
-            console.log("mt from dataset: ",mt)
-            console.log("species associated with datatset: ", species)
-            const response = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
-            // performQCMetrics endpoint 
-            console.log('Response for perform qc metrics is:', response);
+            //means checking qc
+            if(URL = checkQCTaskStatusURL){
+              const mt = SpeciesToMt[species]
+              console.log("mt from dataset: ",mt)
+              console.log("species associated with datatset: ", species)
+              const response = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
+              // performQCMetrics endpoint 
+              console.log('Response for perform qc metrics is:', response);
+            }else if(URL = checkPATaskStatusURL){//means checking pa
+              //create list of datasets
+              const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
+              const repsonse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
+              console.log('Response for starting pa is: ', response);
+            }
         }
         else if(data.ready === false) {
           setTimeout(checkTaskStatus, 5000); //check task status again after 5 seconds
@@ -129,9 +128,18 @@ const Loading = ({data: token}) => {
       }
     };
 
+
+
     console.log("loading variable: ",isLoading)
     if (isLoading) {
-      checkTaskStatus();
+      // Cellborg-beta-PA-Cluster
+      var url;
+      if(task.split("/")[1] == 'Cellborg-beta-PA-Cluster'){
+        url = checkPATaskStatusURL;
+      }else if(task.split("/")[1] == 'Cellborg-beta-QC-Cluster'){
+        url = checkQCTaskStatusURL
+      }
+      checkTaskStatus(url);
     }
   }, [isLoading, router, dataset, task,species, selectedProject.project_id, selectedProject.user, token]);
 

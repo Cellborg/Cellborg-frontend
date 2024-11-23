@@ -1,3 +1,4 @@
+import { tokenize } from "protobufjs";
 import { API_URL } from "../../constants";
 
 async function mongoRequest(endpoint, data = {}, token = "") {
@@ -81,7 +82,7 @@ async function deleteUser(userId, token) { // change backend route to POST not D
     return;
 }
 
-/* DATASET REQUESTS */
+/* QC REQUESTS */
 async function loadQCPlot(selectedProject) {
     const data = {
         user: selectedProject.user,
@@ -134,7 +135,26 @@ async function finishDoublets(user, project, dataset, doubletScore, token){
     };
     return await mongoRequest('qc/finishDoublets', data, token);
 }
+/*PA REQUESTS */
+async function prepPA(user, project, token){
+    const data = {
+        user: user,
+        project: project,
+    }
+    return await mongoRequest('/pa/prepareProcessing', data, token);
+}
 
+async function beginPA(user, proj, datasets, token){
+    const data = {
+        user: user,
+        project: proj,
+        datasets: datasets
+    }
+    return await mongoRequest('/pa/beginPA', data, token);
+}
+
+
+/*ANALYSIS REQUESTS */
 async function begin(prefix) {
     const data = { prefix: prefix };
     console.log('Beginning Analysis for dataset:', prefix);
@@ -260,7 +280,7 @@ async function collectGenenames(geneNameRequest) {
 
 
 export { getProjects, getProject, deleteProject, updateProject, createProject, getMetadata, signUp, getUser, deleteUser,
-loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets, begin, varfeatureanalysis, loadGeneFeaturePlot,
+loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets,prepPA,beginPA, begin, varfeatureanalysis, loadGeneFeaturePlot,
 newAnalysisId, beginAnalysis, loadCPlot, collectGenenames, heatmapanalysis, psuedotimeAnalysis, loadDotPlot, loadVlnPlots, 
 annotateClusters, findAllMarkersAnalysis, findMarkersAnalysis,sendAccountRequest,sendReportBug,newDatasetId }
 

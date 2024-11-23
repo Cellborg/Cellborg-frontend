@@ -4,7 +4,7 @@ import { s3Client } from './utils/s3client.mjs';
 import {PutObjectCommand} from "@aws-sdk/client-s3"; 
 import { useRouter } from 'next/router';
 import { MutatingDots } from 'react-loader-spinner';
-import { createProject, newAnalysisId, beginAnalysis, updateProject} from './utils/mongoClient.mjs';
+import { createProject, newAnalysisId, beginAnalysis, updateProject, prepPA} from './utils/mongoClient.mjs';
 import { AnalysisRun } from './AnalysisRun';
 import {datasetUploadBucket} from '../constants.js';
 import dynamic from 'next/dynamic';
@@ -123,8 +123,13 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             console.log("Datasets: ", datasetIDs);
             
             //push user to loading page, reuse qc loading cause no need to create a new one
-            pageRouter.push("/loading");
-            //const res = await beginPA() // presumably start pa
+            const res = await prepPA(selectedProject.user, selectedProject.project_id, token)
+            if(res){
+                pageRouter.push(`/loading?task=${res.taskArn}`);
+                console.log('Successfully sent request to start PA');
+            }else{
+                console.log('ERROR: FAILED TO SEND REQUEST TO START PA')
+            }
         }catch(error){
             console.log("Error running analysis: ", error);
         }
