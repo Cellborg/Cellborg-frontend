@@ -123,7 +123,7 @@ const Loading = ({data: token}) => {
             }
         }
         else if(data.ready === false) {
-          setTimeout(checkTaskStatus(URL), 5000); //check task status again after 5 seconds
+          setTimeout(()=>checkTaskStatus(URL), 5000); //check task status again after 5 seconds
         }
       } catch (error) {
         console.error("Error fetching task status:", error);

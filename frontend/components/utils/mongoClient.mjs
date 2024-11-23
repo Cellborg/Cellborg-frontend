@@ -150,7 +150,7 @@ async function beginPA(user, proj, datasets, token){
         project: proj,
         datasets: datasets
     }
-    return await mongoRequest('pa/beginPA', data, token);
+    return await mongoRequest('pa/beginProcessing', data, token);
 }
 
 
