@@ -134,10 +134,13 @@ const Loading = ({data: token}) => {
     if (isLoading) {
       // Cellborg-beta-PA-Cluster
       var url;
+      console.log('Process here: ',task.split("/")[1])
       if(task.split("/")[1] == 'Cellborg-beta-PA-Cluster'){
+        console.log('Using PA')
         url = checkPATaskStatusURL;
       }else if(task.split("/")[1] == 'Cellborg-beta-QC-Cluster'){
-        url = checkQCTaskStatusURL
+        console.log("using QC")
+        url = checkQCTaskStatusURL;
       }
       checkTaskStatus(url);
     }
