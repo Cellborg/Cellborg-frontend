@@ -117,6 +117,7 @@ const Loading = ({data: token}) => {
             }else if(URL == checkPATaskStatusURL){//means checking pa
               //create list of datasets
               const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
+              print("datasets for pa are here: ", datasets);
               const PAresponse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
               console.log('Response for starting pa is: ', PAresponse);
             }
