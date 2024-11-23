@@ -141,7 +141,7 @@ async function prepPA(user, project, token){
         user: user,
         project: project,
     }
-    return await mongoRequest('/pa/prepareProcessing', data, token);
+    return await mongoRequest('pa/prepareProcessing', data, token);
 }
 
 async function beginPA(user, proj, datasets, token){
@@ -150,7 +150,7 @@ async function beginPA(user, proj, datasets, token){
         project: proj,
         datasets: datasets
     }
-    return await mongoRequest('/pa/beginPA', data, token);
+    return await mongoRequest('pa/beginPA', data, token);
 }
 
 
