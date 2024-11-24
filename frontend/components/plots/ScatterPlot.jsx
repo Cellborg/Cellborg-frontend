@@ -19,7 +19,12 @@ const ScatterPlot = ({plotKey,bucket}) => {
         try {
           const data = await getPlotData(bucket, plotKey);
           setPlotData(data);
+          console.log("about to start iterating");
           if (data && Object.keys(clusters).length === 0) {
+            console.log("inside if statement");
+            console.log(clusters);
+            console.log(Object.keys(clusters).length);
+            console.log(data.total_clusters);
             const clusterData = {};
             for (let i = 0; i < data.total_clusters; i++) {
               clusterData[`${i}`] = `${i}`;
