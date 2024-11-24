@@ -8,7 +8,7 @@ export const ClusterPlotForm = ({ setIsDataLoading, setClusterPlotKey, token }) 
     const { selectedProject} = useProjectContext();
 
     function generateClusterPlotKey(resolution) {
-        const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${parse(resolution*100)}.json`
+        const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${parseInt(resolution*100)}.json`
         setClusterPlotKey(clusterPlotKey);
         return clusterPlotKey;
     }
