@@ -37,6 +37,7 @@ export const ProjectProvider = ({ children }) => {
   const [items, setItems] = useState(null);
   const [selectedProject, setSelectedProject] = useState({});
   const [clusters, setClusters] = useState({});
+  const [geneList, setGeneList] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,12 +94,9 @@ export const ProjectProvider = ({ children }) => {
   }, [projects]);
 
   useEffect(() => {
-    setIndexedDB('clusters', clusters);
-  }, [clusters]);
+    setIndexedDB('geneList', geneList);
+  }, [geneList]);
 
-  useEffect(() => {
-    setIndexedDB('clusters', clusters);
-  }, [clusters]);
 
   return (
     <ProjectContext.Provider value={{
@@ -115,7 +113,9 @@ export const ProjectProvider = ({ children }) => {
       items,
       setItems,
       clusters,
-      setClusters
+      setClusters,
+      geneList,
+      setGeneList
     }}>
       {children}
     </ProjectContext.Provider>

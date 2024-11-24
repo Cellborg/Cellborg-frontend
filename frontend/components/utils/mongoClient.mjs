@@ -152,6 +152,10 @@ async function beginPA(user, proj, datasets, token){
     }
     return await mongoRequest('pa/beginProcessing', data, token);
 }
+async function loadCPlot(data, token) {
+    
+    return await mongoRequest('pa/clustering', data, token);
+};
 
 
 /*ANALYSIS REQUESTS */
@@ -268,10 +272,6 @@ async function beginAnalysis2(user, project, analysisId, datasets) {
         datasets: datasets
     }
     return await mongoRequest('analysis/beginAnalysis2', analysisRequest);
-};
-
-async function loadCPlot(data, token) {
-    return await mongoRequest('analysis/loadClusterPlot', data, token);
 };
 
 async function collectGenenames(geneNameRequest) {

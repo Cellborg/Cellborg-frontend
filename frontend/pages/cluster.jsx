@@ -7,11 +7,12 @@ import { NextButton } from '../components/NextButton';
 import PagesNavbar from '../components/PagesNavbar';
 import Sidebar from '../components/Sidebar';
 import { useProjectContext } from '../components/utils/projectContext';
-import SocketComponent from '../components/SocketComponent';
-import { datasetclusterBucket } from '../constants';
+import { datasetqcBucket } from '../constants';
 import { getToken } from '../components/utils/security.mjs';
 import { GoReport } from "react-icons/go";
 import BugReportForm from '../components/BugReportForm';
+import { socketio } from '../constants';
+import io from 'socket.io-client';
 
 const DynamicScatterPlot = dynamic(() => import('../components/plots/ScatterPlot'), {
   ssr: false,
@@ -21,8 +22,21 @@ const Cluster = ({data: session, token}) => {
   const [clusterPlotKey, setClusterPlotKey] = useState("");
   const [complete, setComplete] = useState(false);
   const [isDataLoading, setIsDataLoading]=useState(false);
-  const {selectedProject} = useProjectContext();
+  const {selectedProject, setClusters, setGeneList} = useProjectContext();
   const [showForm,setShowForm]=useState(false);
+
+  useEffect(()=>{
+    const socket = io(socketio);
+    socket.emit('RegisterConnection', selectedProject.user);
+
+    socket.on('PA_Clustering_Complete', async (data)=>{
+      const {user, project, geneNames,clusters, stage} = data;
+
+      //add info to clusters and gene names to context for annotations
+      setClusters(clusters);
+      setGeneList(geneNames);
+    })
+  }, [])
   useEffect(() => {
     if (complete) {
       setIsDataLoading(false);
@@ -32,7 +46,7 @@ const Cluster = ({data: session, token}) => {
   const renderPlots = () => {
     if (complete) {
       return (
-        <DynamicScatterPlot plotKey={clusterPlotKey} bucket={datasetclusterBucket} setIsDataLoading={setIsDataLoading}/>
+        <DynamicScatterPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} setIsDataLoading={setIsDataLoading}/>
       );
     }
     return null;
@@ -49,11 +63,6 @@ const Cluster = ({data: session, token}) => {
       >
         <GoReport />
       </div>
-      <SocketComponent
-        user={selectedProject.user}
-        step={"clusters"}
-        setComplete={setComplete}
-      />
      <PagesNavbar page="CLUSTER ANALYSIS"/>
       <Sidebar page = "Clusters" />
       <div className='flex flex-row mt-3'>
