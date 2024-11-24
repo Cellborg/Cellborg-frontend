@@ -33,7 +33,7 @@ const Cluster = ({data: session, token}) => {
       const {user, project, geneNames,clusters, stage} = data;
 
       //add info to clusters and gene names to context for annotations
-      setClusters(clusters);
+      //setClusters(clusters);
       setGeneList(geneNames);
       setComplete(true);
     })

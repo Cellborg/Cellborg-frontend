@@ -20,6 +20,7 @@ const ScatterPlot = ({plotKey,bucket}) => {
           const data = await getPlotData(bucket, plotKey);
           setPlotData(data);
           console.log("about to start iterating");
+          console.log(clusters)
           if (data && Object.keys(clusters).length === 0) {
             console.log("inside if statement");
             console.log(clusters);
