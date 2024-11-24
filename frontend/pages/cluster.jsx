@@ -33,11 +33,15 @@ const Cluster = ({data: session, token}) => {
       const {user, project, geneNames,clusters, stage} = data;
 
       //add info to clusters and gene names to context for annotations
-      //setClusters(clusters);
+      const clusterData = {};
+      for (let i = 0; i < clusters.length; i++) {
+        clusterData[`${i}`] = `${i}`;
+      }
+      setClusters(clusterData);
       setGeneList(geneNames);
       setComplete(true);
     })
-  }, [])
+  }, [setClusters, setGeneList, setComplete])
   useEffect(() => {
     if (complete) {
       setIsDataLoading(false);
