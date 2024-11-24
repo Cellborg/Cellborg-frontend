@@ -35,6 +35,7 @@ const Cluster = ({data: session, token}) => {
       //add info to clusters and gene names to context for annotations
       setClusters(clusters);
       setGeneList(geneNames);
+      setComplete(true);
     })
   }, [])
   useEffect(() => {
