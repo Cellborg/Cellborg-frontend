@@ -73,6 +73,17 @@ const Loading = ({data: token}) => {
       const response = await handleFinishQC(selectedProject.user, selectedProject.project_id, dataset, router, token);
       router.push('/dashboard')
     },
+    socket.on('QC_Running', async(data)=>{
+      const {user, stage} = data;
+
+      setIsLoading(false);
+      const mt = SpeciesToMt[species]
+      console.log("mt from dataset: ",mt)
+      console.log("species associated with datatset: ", species)
+      const QCresponse = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
+      // performQCMetrics endpoint 
+      console.log('Response for perform qc metrics is:', QCresponse);
+    }),
     //beingPA socket notification
     socket.on('PA_Initialize_Project', async(data)=>{
         const {user, project, stage} = data;
@@ -88,7 +99,7 @@ const Loading = ({data: token}) => {
     
 }, [projects, selectedProject, router, setProjects, setSelectedProject, name]);
 
-  useEffect(() => {
+  /*useEffect(() => {
   
     //move to the api beginqualitycontril endpoint function itself
     const checkTaskStatus = async (URL) => {
@@ -146,7 +157,7 @@ const Loading = ({data: token}) => {
       }
       checkTaskStatus(url);
     }
-  }, [isLoading, router, dataset, task,species, selectedProject.project_id, selectedProject.user, token]);
+  }, [isLoading, router, dataset, task,species, selectedProject.project_id, selectedProject.user, token]);*/
 
   return (
     <div className='w-screen h-screen flex justify-center items-center'>
