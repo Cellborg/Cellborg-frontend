@@ -96,7 +96,7 @@ const Cluster = ({data: session, token}) => {
       </div>
       <div className="flex justify-center">
         <div className={`w-1/3 mt-2 text-white`}>
-          <NextButton path={`/Annotations?${clusterPlotKey.split('/').pop().split('.json')[0]}`} complete={complete}/>
+          <NextButton path={`/Annotations?res=${parseInt(resolution*100)}`} complete={complete}/>
         </div>
       </div>
     </div>

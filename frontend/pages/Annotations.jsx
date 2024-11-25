@@ -35,7 +35,7 @@ const AnnotationInput = React.memo(({ index, value, onChange }) => {
     );
 });
 
-const Annotations = ({data: session, token, n, c, d, r}) => {
+const Annotations = ({data: session, token, resolution}) => {
     const [activeTab, setActiveTab] = useState('cluster');
     const [geneFeature, setGeneFeature] = useState("");
     const [genes, setGenes] = useState([]);
@@ -276,8 +276,8 @@ const Annotations = ({data: session, token, n, c, d, r}) => {
 export async function getServerSideProps(context) {
     // Get the user's JWT access token from next's server-side cookie
     const token = await getToken(context);
-    const { n, c, d, r } = context.query;
-    console.log(n, c, d, r);
+    const resolution = context.query;
+    console.log(resolution);
     if (!token) {
       return {
         redirect: {
@@ -289,7 +289,7 @@ export async function getServerSideProps(context) {
       return {
         props: { 
           token,
-          n, c, d, r
+          resolution
         }
       }
   };
