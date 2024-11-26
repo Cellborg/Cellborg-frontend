@@ -90,6 +90,15 @@ const Loading = ({data: token}) => {
 
         console.log(`PA ${stage} had been completed on project ${project} for ${user}`);
         router.push('/cluster');
+    }),
+    socket.on('PA_Running', async(data)=>{
+      const {user, stage} = data;
+      
+      //create list of datasets
+      const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
+      console.log("datasets for pa are here: ", datasets);
+      const PAresponse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
+      console.log('Response for starting pa is: ', PAresponse);
     })
   
   )
