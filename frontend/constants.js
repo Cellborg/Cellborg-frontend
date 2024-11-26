@@ -37,11 +37,6 @@ export const paCleanupURL = `${API_URL}/api/pa/paCleanUp`;
 //pages/AnalysisOptions.jsx
 export const analysisCleanUpURL=`${API_URL}/api/analysis/analysisCleanUp`;
 
-//pages/loading.jsx
-export const checkQCTaskStatusURL=`${API_URL}/api/qc/checkQCTaskStatus`;
-
-export const checkPATaskStatusURL = `${API_URL}/api/pa/checkPAStatus`
-
 //pages/api/auth/
 export const LOGIN_URL = `${API_URL}/api/auth/login`;
 

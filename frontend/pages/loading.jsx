@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import {checkQCTaskStatusURL, checkPATaskStatusURL} from '../constants.js';
 import {MutatingDots} from 'react-loader-spinner'; 
 import io from 'socket.io-client';
 import {socketio} from '../constants.js';
@@ -107,66 +106,6 @@ const Loading = ({data: token}) => {
     };
     
 }, [projects, selectedProject, router, setProjects, setSelectedProject, name]);
-
-  /*useEffect(() => {
-  
-    //move to the api beginqualitycontril endpoint function itself
-    const checkTaskStatus = async (URL) => {
-      try {
-        const response = await fetch(URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type' : 'application/json',
-              'Authorization' : `Bearer ${token}`
-            },
-            body: JSON.stringify({taskArn: task})
-        });
-        const data = await response.json();
-        console.log('checkTaskStatus response: ',data)
-        if (data.ready === true) { 
-            setIsLoading(false);
-
-            //means checking qc
-            if(URL == checkQCTaskStatusURL){
-              const mt = SpeciesToMt[species]
-              console.log("mt from dataset: ",mt)
-              console.log("species associated with datatset: ", species)
-              const QCresponse = await performQCMetricsPrePlot(selectedProject.user, selectedProject.project_id, dataset, mt, token);
-              // performQCMetrics endpoint 
-              console.log('Response for perform qc metrics is:', QCresponse);
-            }else if(URL == checkPATaskStatusURL){//means checking pa
-              //create list of datasets
-              const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
-              console.log("datasets for pa are here: ", datasets);
-              const PAresponse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
-              console.log('Response for starting pa is: ', PAresponse);
-            }
-        }
-        else if(data.ready === false) {
-          setTimeout(()=>checkTaskStatus(URL), 5000); //check task status again after 5 seconds
-        }
-      } catch (error) {
-        console.error("Error fetching task status:", error);
-      }
-    };
-
-
-
-    console.log("loading variable: ",isLoading)
-    if (isLoading) {
-      // Cellborg-beta-PA-Cluster
-      var url;
-      console.log('Process here: ',task.split("/")[1])
-      if(task.split("/")[1] == 'Cellborg-beta-PA-Cluster'){
-        console.log('Using PA')
-        url = checkPATaskStatusURL;
-      }else if(task.split("/")[1] == 'Cellborg-beta-QC-Cluster'){
-        console.log("using QC")
-        url = checkQCTaskStatusURL;
-      }
-      checkTaskStatus(url);
-    }
-  }, [isLoading, router, dataset, task,species, selectedProject.project_id, selectedProject.user, token]);*/
 
   return (
     <div className='w-screen h-screen flex justify-center items-center'>
