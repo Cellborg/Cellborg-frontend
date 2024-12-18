@@ -20,6 +20,7 @@ const Loading = ({data: token}) => {
   const { task,dataset,name,species} = router.query;
   const { selectedProject, setSelectedProject, setProjects, projects } = useProjectContext();
   const [showForm,setShowForm]=useState(false);
+  const [isQC, setisQC] = useState(true)
   
   console.log("Selected project is:", selectedProject);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,10 +95,13 @@ const Loading = ({data: token}) => {
       const {user, stage} = data;
       
       //create list of datasets
+      setIsLoading(false);
+      setisQC(false);
       const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
       console.log("datasets for pa are here: ", datasets);
       const PAresponse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
       console.log('Response for starting pa is: ', PAresponse);
+      
     })
   
   )
@@ -129,7 +133,12 @@ const Loading = ({data: token}) => {
       wrapperClass="flex justify-center item-center"
       visible={true}
     />
-    {isLoading ? <div>Starting ECS Task...</div> : <div>Performing QC...</div>}
+    {isLoading ? <div>Starting ECS Task...</div>
+     :
+     <>
+     {isQC ? 
+      <div>Performing QC...</div>:<div>Performing Processing and Annotations...</div>
+     }</> }
     </div>
   )
 }

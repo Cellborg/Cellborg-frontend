@@ -55,17 +55,19 @@ const Dashboard = ({data: session, token}) => {
     const createNewProject = () => {
         setSelectedProject({
             name: '',
-            description: ''
+            description: '',
+            datasets:[]
         });
         setEditMode(true);        
     }
     /*
      * gets out of delete mode by setting deletedProject in context to empty and user-mode to false
      */
-  const exitDeleted=()=>{
-    setDeletedProject({})
-    setDeleteMode(false)
-  }
+    const exitDeleted=()=>{
+      setDeletedProject({});
+      //setSelectedProject(null);
+      setDeleteMode(false);
+    }
 
   /**
      * @param {}
@@ -96,7 +98,7 @@ const Dashboard = ({data: session, token}) => {
     //update cache
     setProjects(deletedProjectList)
     setDeletedProject({})
-    setSelectedProject([])
+    setSelectedProject(null)
     setDeleteMode(false)
 }
   return (

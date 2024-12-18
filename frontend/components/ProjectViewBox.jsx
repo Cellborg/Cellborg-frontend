@@ -10,6 +10,8 @@ import {datasetUploadBucket} from '../constants.js';
 import dynamic from 'next/dynamic';
 import { get, set, update } from 'idb-keyval';
 import {findSpecies} from './FindSpecies.js';
+import { IoIosInformationCircleOutline } from 'react-icons/io';
+
 const DatasetFolder = dynamic(() => import('../components/DatasetFolder'), {
     ssr: false,
   });
@@ -28,7 +30,8 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
     const [editedProject, setEditedProject] = useState({});
     const [uploadedFolders, setUploadedFolders] = useState([]);
     const [selectedDatasets, setSelectedDatasets] = useState([]);
-    const { setProjects, user, selectedProject, setSelectedProject, setAnalysisId } = useProjectContext();
+    const [showUploadDatasetInfo, setShowUploadDatasetInfo] = useState(false);
+    const { setProjects, user, selectedProject, setSelectedProject, setAnalysisId, projects } = useProjectContext();
 
     /** 
      * checks for valid file structure
@@ -38,15 +41,42 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
      * @returns {Boolean}
     */
     function validFiles(files) {
+
         //creates array from files
         const selectedFolder = Array.from(files).map(file => (file.name));
+        if (selectedFolder.length < 3){return false; }
+        console.log('selected folder here',selectedFolder)
+        let requiredbarcodes = false;
+        let requiredfeatures = false;
+        let requiredmatrix = false;
         //impliments above checks
-        if (selectedFolder.length < 3) { return false; }
-        if (selectedFolder.indexOf("features.tsv.gz") > -1 &&
-            selectedFolder.indexOf("barcodes.tsv.gz") > -1 && 
-            selectedFolder.indexOf("matrix.mtx.gz") > -1) {
+        for (let i = 0; i < selectedFolder.length; i++) {
+            const fileName = files[i].name;
+            console.log(fileName)
+            if (fileName.endsWith('barcodes.tsv.gz')) {
+                if(requiredbarcodes){ //if barcodes already true that means there is a duplicate
+                    return false;
+                }
+                requiredbarcodes = true;
+
+            }
+            if (fileName.endsWith('features.tsv.gz')) {
+                if(requiredfeatures){ //if features already true that means there is a duplicate
+                    return false;
+                }
+                requiredfeatures = true;
+            }
+            if (fileName.endsWith('matrix.mtx.gz')) {
+                if(requiredmatrix){ //if matrix already true that measnt there is a duplicate
+                    return false;
+                }
+                requiredmatrix = true;
+            }
+            if (requiredbarcodes && requiredfeatures && requiredmatrix) {
                 return true;
             }
+        }
+        console.log("made it past length check", selectedFolder.length)
         return false;
     }
 
@@ -172,6 +202,10 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         setEditMode(false);
         setEditedProject({});
         setUploadedFolders([]);
+        //make sure to only empty viewbox when canceling project creation
+        if(selectedProject.name===''){
+            setSelectedProject(null);
+        }
     };
     /**
      * @param {Object} project {user: str, name: str, datasets: list(Objects), runs:[], project_id:str}{
@@ -248,8 +282,9 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
         const uploadPromises = [];
         for (const dataset of selectedDatasets) {
             for (const file of Array.from(dataset)) {
-                
-                uploadPromises.push(uploadToS3Bucket(file, project, s3Client, datasetUploadBucket));
+                if(file.name.endsWith('barcodes.tsv.gz') || file.name.endsWith('features.tsv.gz') || file.name.endsWith('matrix.mtx.gz')){
+                    uploadPromises.push(uploadToS3Bucket(file, project, s3Client, datasetUploadBucket));
+                }
             }
         }
     
@@ -364,7 +399,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
             editedProjectList = [...editedProjectList,resProject]
 
             // Update the cache with the updated list of projects
-            // set('cachedProjects', editedProjectList)
+            //set('cachedProjects', editedProjectList)
             setProjects(editedProjectList)
             setEditMode(false);
             setEditedProject({});
@@ -422,7 +457,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         <div className='mt-5 font-bold text-blue font-roboto'> Datasets:</div>
                         {selectedProject.datasets ? (
                             <div 
-                            className='flex flex-col items-start overflow-y-scroll pt-7 rounded-lg bg-white shadow-lg'
+                            className='flex flex-col items-start overflow-y-scroll rounded-lg bg-white shadow-lg'
                             style={{maxHeight:"30vh"}}
                             >
                                 {selectedProject.datasets.map((dataset, index) => (
@@ -491,7 +526,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                             <div className='m-2 font-bold text-blue'>Datasets:</div>
                             {selectedProject.datasets && (
                             <div 
-                            className='mt-2 flex flex-col items-start border overflow-y-scroll'
+                            className={`mt-2 flex flex-col items-start overflow-y-scroll`}
                             style={{maxHeight:"30vh"}}
                             >
                                 {selectedProject.datasets.map((dataset,index) => (
@@ -511,30 +546,65 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                                     ))}
                                 </div>
                             )}
-                            <input
-                                className="block w-full text-sm text-slate-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue file:text-white
-                                hover:file:bg-blue/50 
-                              "
-                                id="fileInput"
-                                type="file"
-                                onChange={handleFolderUpload}
-                                webkitdirectory="true" 
-                                mozdirectory="true" 
-                                directory="true"
-                            />
+                            <div className="flex items-center">
+                                <label
+                                    className=" w-fit text-sm
+                                    mr-4 py-2 px-4
+                                    rounded-full
+                                    font-semibold
+                                    bg-blue text-white
+                                    hover:bg-blue/50 
+                                    hover:cursor-pointer
+                                "
+                                >
+                                    <input 
+                                    type="file" 
+                                    id="fileInput" 
+                                    className="hidden" 
+                                    onChange={handleFolderUpload}
+                                    webkitdirectory="true" 
+                                    mozdirectory="true" 
+                                    directory="true"
+
+                                    />
+                                Upload Sample
+                                </label>
+                                <div>
+                                {showUploadDatasetInfo&&(
+                                    <div className = "bg-slate-100  border-blue border-2 text-xs rounded-md p-2 absolute -translate-y-full whitespace-nowrap">
+                                        <h1>Ensure your uploaded folder contains:</h1>
+                                        <ul className="pt-2 pb-2 pl-3 font-roboto">
+                                            <li>barcodes.tsv.gz</li>
+                                            <li>features.tsv.gz</li>
+                                            <li>matrix.mtx.gz</li>
+                                        </ul>
+                                        <h1> Prefixes (e.g. <span className="font-roboto">control_barcodes.tsv.gz</span>) are okay.</h1>
+                                    </div>
+                                )}
+                                <IoIosInformationCircleOutline
+                                    className='w-6 h-6 cursor-pointer'
+                                    onMouseEnter={() => setShowUploadDatasetInfo(true)}
+                                    onMouseLeave={() => setShowUploadDatasetInfo(false)}
+                                />
+                                </div>
+                            </div>
                         </div>
 
-                        <button className={`border px-2 py-1 mt-5 m-2 rounded-md hover:bg-cyan hover:text-black`} disabled={uploadedFolders.length===0 } onClick={handleSaveEdit}>Save</button>
+                        <button className={`border px-2 py-1 mt-5 m-2 rounded-md hover:bg-cyan hover:text-black ${uploadedFolders.length===0&&selectedProject.datasets.length===0 ? "cursor-not-allowed": "cursor-pointer"}`} disabled={uploadedFolders.length===0&&selectedProject.datasets.length===0} onClick={handleSaveEdit}>Save</button>
                         <button className='border px-2 py-1 mt-5 m-2 rounded-md hover:bg-red-400 hover:text-black' onClick={handleCancelEdit}>Cancel</button>
                     </div>
                 )}
             </>
           ) : (
-            <p className="">Select a project to view</p>
+            <>
+            {projects.length===0?
+            (
+                <p>No projects to view</p>
+            ):
+            (
+                <p>Select a project to view</p>
+            )}
+            </>
           )}
         </>
         )}
