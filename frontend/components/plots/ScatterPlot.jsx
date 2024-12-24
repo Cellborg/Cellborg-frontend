@@ -43,6 +43,7 @@ const ScatterPlot = ({plotKey,bucket}) => {
 
     let traces = [];
     if (plotData) {
+      console.log(plotData);
         const totalClusters = plotData.total_clusters;
         const clusterCounts = plotData.clusterCounts;  
         const plotclusters = plotData.cluster;

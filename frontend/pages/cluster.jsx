@@ -17,7 +17,7 @@ import io from 'socket.io-client';
 const DynamicScatterPlot = dynamic(() => import('../components/plots/ScatterPlot'), {
   ssr: false,
 });
-
+ 
 const Cluster = ({data: session, token}) => {
   const [clusterPlotKey, setClusterPlotKey] = useState("");
   const [complete, setComplete] = useState(false);
@@ -31,7 +31,7 @@ const Cluster = ({data: session, token}) => {
 
     socket.on('PA_Clustering_Complete', async (data)=>{
       const {user, project, geneNames,clusters, stage} = data;
-
+      console.log('clustering is complete');
       //add info to clusters and gene names to context for annotations
       const clusterData = {};
       for (let i = 0; i < clusters.length; i++) {
@@ -50,6 +50,7 @@ const Cluster = ({data: session, token}) => {
   
   const renderPlots = () => {
     if (complete) {
+      console.log('Rendering plot now');
       return (
         <DynamicScatterPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} setIsDataLoading={setIsDataLoading}/>
       );
@@ -95,9 +96,9 @@ const Cluster = ({data: session, token}) => {
         </div> 
       </div>
       <div className="flex justify-center">
-        <div className={`w-1/3 mt-2 text-white`}>
+        {/* <div className={`w-1/3 mt-2 text-white`}>
           <NextButton path={`/Annotations?res=${parseInt(resolution*100)}`} complete={complete}/>
-        </div>
+        </div> */}
       </div>
     </div>
   )
