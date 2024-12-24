@@ -1,17 +1,13 @@
 import {useEffect, useState} from 'react';
-import Plot from 'react-plotly.js';
 import { getPlotData, checkIfPlotDataExists } from '../utils/s3client.mjs';
 import { useProjectContext } from '../utils/projectContext';
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
 
 const ScatterPlot = ({plotKey,bucket}) => {
     const [plotData, setPlotData] = useState(null);
     const { clusters, setClusters } = useProjectContext();
-    const COLORS = [
-        '#1f78b4', '#33a02c', '#e31a1c', '#ff7f00', '#6a3d9a', 
-        '#a6cee3', '#b2df8a', '#fb9a99', '#fdbf6f', '#cab2d6',
-        '#ff6347', '#8dd3c7', '#ffffb3', '#bebada', '#fb8072',
-        '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9'
-    ];
+    
     useEffect(() => {
       console.log('Key:', plotKey);
       console.log('Bucket:', bucket);
@@ -41,81 +37,128 @@ const ScatterPlot = ({plotKey,bucket}) => {
       }
     }, [plotKey, bucket, clusters, setClusters]);
 
-    let traces = [];
-    if (plotData) {
-      console.log(plotData);
-        const totalClusters = plotData.total_clusters;
-        const clusterCounts = plotData.clusterCounts;  
-        const plotclusters = plotData.cluster;
-        const xCoordinates = plotData.X;
-        const yCoordinates = plotData.Y;
-
-        for (let i = 0; i < totalClusters; i++) {
-            const clusterIndices = plotclusters.map((cluster, index) => cluster === i+1 ? index : null).filter(index => index !== null);
-            const xCluster = clusterIndices.map(index => xCoordinates[index]);
-            const yCluster = clusterIndices.map(index => yCoordinates[index]);
-
-            traces.push({
-                type: 'scatter',
-                mode: 'markers',
-                x: xCluster,
-                y: yCluster,
-                name: `Cluster ${i}`, 
-                legendgroup: `Cluster ${i}`,
-                showlegend: false,  // Hide this trace in the legend
+    let options;
+    useEffect(()=>{
+      if (plotData) {
+        // Convert the JSON object into an array
+        const dataArray = Object.values(plotData);
+        console.log(dataArray);
+  
+        // Calculate global min and max for X and Y axes
+        const xValues = dataArray.map(elm => elm.UMAP1);
+        const yValues = dataArray.map(elm => elm.UMAP2);
+  
+        const xMin = Math.min(...xValues);
+        const xMax = Math.max(...xValues);
+        const yMin = Math.min(...yValues);
+        const yMax = Math.max(...yValues);
+  
+  
+        // Group data by cluster
+        const clusterData = {};
+        dataArray.forEach(elm => {
+            if (!clusterData[elm.cluster]) {
+                clusterData[elm.cluster] = [];
+            }
+            clusterData[elm.cluster].push([elm.UMAP1, elm.UMAP2]);
+        });
+  
+        console.log(clusterData);
+  
+        // Generate series dynamically
+        const series = Object.keys(clusterData).map((cluster, index) => ({
+          name: `Cluster ${cluster}`,
+          id: cluster,
+          data: clusterData[cluster],
+          marker: {
+              symbol: 'circle'
+          }
+        }));
+  
+        // Create the Highcharts scatter plot
+      options = {
+        chart: {
+            type: 'scatter',
+            zooming: {
+                type: 'xy'
+            },
+            boost: {
+                enabled: true,
+                useGPUTranslations: true,
+                seriesThreshold: 1
+            }
+        },
+        title: {
+            text: 'Clustering of Cells'
+        },
+        xAxis: {
+            title: {
+                text: 'UMAP1'
+            },
+            min: xMin - 1, // Add padding for better visualization
+            max: xMax + 1,
+            gridLineWidth: 0,
+            labels: {
+                enabled: false
+            },
+            tickLength: 0,
+            lineWidth: 1
+        },
+        yAxis: {
+            title: {
+                text: 'UMAP2'
+            },
+            min: yMin - 1,
+            max: yMax + 1,
+            gridLineWidth: 0,
+            labels: {
+                enabled: false
+            },
+            tickLength: 0,
+            lineWidth: 1
+        },
+        legend: {
+            enabled: true
+        },
+        plotOptions: {
+            series: {
+                turboThreshold: 10000 // Disable threshold to allow large datasets
+            },
+            scatter: {
                 marker: {
-                    color: COLORS[i % COLORS.length],
-                    size: 3,
-                    opacity: 0.8,
+                    fillOpacity: 1,
+                    radius: 2.5,
+                    symbol: 'circle',
+                    states: {
+                        hover: {
+                            enabled: true,
+                            lineColor: 'rgb(100,100,100)'
+                        }
+                    }
                 },
-            });
+                states: {
+                    hover: {
+                        marker: {
+                            enabled: true
+                        }
+                    }
+                }
+            }
+        },
+        tooltip: {
+            formatter: function () {
+                return this.series.name; // Show only the cluster name
+            }
+        },
+        series
+    };
+  }
+    }, [plotData, options])
 
-            // Legend-only trace
-            traces.push({
-                type: 'scatter',
-                mode: 'markers',
-                x: [null],  // null values so it doesn't appear on the plot
-                y: [null],
-                name: `Cluster ${clusters[`${i}`]} (${clusterCounts[i]} cells)`,
-                legendgroup: `Cluster ${clusters[`${i}`]}`,  
-                showlegend: true,  // Show this trace in the legend
-                marker: {
-                    color: COLORS[i % COLORS.length],
-                    size: 10,  
-                },
-            });
-        }
-        console.log(traces);
-    }
     return (
       <div className="w-full h-full bg-white rounded-lg">
         {plotData && (
-          <Plot
-            className='w-full h-full'
-            data={traces}
-            layout={{
-              title: 'UMAP Clustering',
-              xaxis: {
-                title: "UMAP1",
-                zeroline: false,
-                showgrid: false,
-                showticklabels: false,
-                showline: false,
-                range: [Math.min(...plotData.X), Math.max(...plotData.X)],
-                fixedrange: true
-              },
-              yaxis: {
-                title: "UMAP2",
-                zeroline: false,
-                showgrid: false,
-                showticklabels: false,
-                showline: false,
-                range: [Math.min(...plotData.Y), Math.max(...plotData.Y)],
-                fixedrange: true
-              }
-            }}
-            config={{ displaylogo: false }}
-          />
+          <HighchartsReact highcharts={Highcharts} options={options} />
         )}
       </div>
     );
