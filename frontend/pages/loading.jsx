@@ -92,7 +92,7 @@ const Loading = ({data: token}) => {
         const project_values = getProjectValues(selectedProject);
         const gene_list = project_values.gene_list;
         console.log('gene list retrieved: ', gene_list);
-        setGeneList(geneNames);
+        setGeneList(gene_list);
         console.log("finished setting gene list")
         router.push('/cluster');
     }),
