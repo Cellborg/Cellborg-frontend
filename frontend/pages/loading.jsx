@@ -90,6 +90,7 @@ const Loading = ({data: token}) => {
         //pull gene list from project_values.json here
         console.log("Getting gene list now...")
         const project_values = getProjectValues(selectedProject);
+        console.log(project_values);
         const gene_list = project_values.gene_list;
         console.log('gene list retrieved: ', gene_list);
         setGeneList(gene_list);
