@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import {MutatingDots} from 'react-loader-spinner'; 
 import io from 'socket.io-client';
 import {socketio, SESSION_COOKIE, SpeciesToMt } from '../constants.js';
-import { useProjectContext, setGeneList} from '../components/utils/projectContext';
+import { useProjectContext} from '../components/utils/projectContext';
 import { performQCMetricsPrePlot, beginPA, updateProject} from '../components/utils/mongoClient.mjs';
 import cookie from "cookie";
 import { get, set } from 'idb-keyval'
@@ -16,7 +16,7 @@ const Loading = ({data: token}) => {
   console.log("token:", token);
   const router = useRouter();
   const { task,dataset,name,species} = router.query;
-  const { selectedProject, setSelectedProject, setProjects, projects } = useProjectContext();
+  const { selectedProject, setSelectedProject, setProjects, projects, setGeneList } = useProjectContext();
   const [showForm,setShowForm]=useState(false);
   const [isQC, setisQC] = useState(true)
   
