@@ -5,7 +5,6 @@ import io from 'socket.io-client';
 import {socketio, SESSION_COOKIE, SpeciesToMt } from '../constants.js';
 import { useProjectContext, setGeneList} from '../components/utils/projectContext';
 import { performQCMetricsPrePlot, beginPA, updateProject} from '../components/utils/mongoClient.mjs';
-import {getProjectValues} from '../components/utils/s3client.mjs';
 import cookie from "cookie";
 import { get, set } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
