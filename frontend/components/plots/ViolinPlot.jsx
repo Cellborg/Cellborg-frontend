@@ -1,152 +1,112 @@
-import React from 'react';
-import HighchartsReact from "highcharts-react-official";
+import React,{ useEffect, useState, useRef} from 'react';
+import processViolin from '../utils/processViolin';
 import Highcharts from 'highcharts';
-
-// Function to calculate 10% of the histogram's maximum height as variable B
-function calculateVariableB(histogramData) {
-  const maxYValue = Math.max(...histogramData.map(point => point[1]));
-  return maxYValue * 0.1; // 10% of the max y-axis value
-}
-
-// Helper function to generate histogram data
-function createHistogramData(data, binSize) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const bins = [];
-  for (let i = min; i <= max; i += binSize) {
-      const count = data.filter(value => value >= i && value < i + binSize).length;
-      bins.push([i + binSize / 2, count]);
-  }
-  return bins;
-}
-
-// Function to add jitter below the x-axis with a maximum width of variable B
-function addJitterBelowXAxis(data, yOffset, jitterWidth) {
-  return data.map(value => [value, yOffset - (Math.random() * jitterWidth)]);
+import HighchartsReact from 'highcharts-react-official';
+import HighchartsExporting from 'highcharts/modules/exporting';
+import highchartsMore from 'highcharts/highcharts-more';
+if (typeof Highcharts === 'object') {
+  HighchartsExporting(Highcharts);
+  highchartsMore(Highcharts);
 }
 
 const ViolinPlot = ({plotData}) => {
-  let optionsNGenes, optionsTotalCounts, optionsPCTCounts;
+  const [chartOptions, setChartOptions]=useState(null);
+  const minMax = useRef({min:0, max:10000});
+
+  useEffect(()=>{
+    if(plotData){
+      // Extract pct_counts_mt values
+      let pctCountsMt = Object.values(plotData).map(d => d.pct_counts_mt).sort((a, b) => a - b);
   
-  if(plotData) {
-    const n_genes_data = Object.values(plotData).map(metrics => metrics.n_genes);
-    const total_counts_data = Object.values(plotData).map(metrics => metrics.total_counts);
-    const pct_counts_mt_data = Object.values(plotData).map(metrics => metrics.pct_counts_mt);
+      // Default min and max
+      minMax.min = Math.min(...pctCountsMt);
+      minMax.max = Math.max(...pctCountsMt);
+  
+      // Function to create the violin data
+      const step = 1;
+      const precision = 0.00001;
+      const width = 3;
+      const violinData = processViolin(step, precision, width, pctCountsMt);
+      console.log("Hrlo");
+      console.log(violinData.results[0]);
+  
+      // Function to update chart with highlighted data
+  
+      function updateChart(min, max) {
+        const dummy = violinData.results[0];
+        console.log(dummy)
+        chart.series[0].setData(dummy.filter(inner => inner[0] <= max), true); // Highlighted Range
+      }
 
-    // Create histogram data with a bin size of your choice
-    const n_genes_histogram = createHistogramData(n_genes_data, 50);
-    const total_counts_histogram = createHistogramData(total_counts_data, 500);
-    const pct_counts_mt_histogram = createHistogramData(pct_counts_mt_data, 0.5);
-
-    // Calculate variable B (10% of histogram height) for each histogram
-    const n_genes_variableB = calculateVariableB(n_genes_histogram);
-    const total_counts_variableB = calculateVariableB(total_counts_histogram);
-    const pct_counts_mt_variableB = calculateVariableB(pct_counts_mt_histogram);
-
-    // Chart 1: Histogram and jittered scatter plot for n_genes
-    optionsNGenes = {
-      chart: { type: 'column' }, // Default chart type can be set here
-      title: { text: 'Number of Genes per Cell' },
-      xAxis: { title: { text: 'n_genes' } },
-      yAxis: { title: { text: 'Frequency' } },
-      tooltip: {
-          crosshairs: true, // Enables vertical line on hover
-          formatter: function () {
-              return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
-          }
-      },
-      series: [
-          {
-              name: 'n_genes Distribution',
-              type: 'column', // Specifying type for this series
-              data: n_genes_histogram,
-              color: 'rgba(124, 181, 236, 0.6)',
-              pointPadding: 0,
-              groupPadding: 0,
-              pointPlacement: 'between'
-          },
-          {
-              name: 'n_genes Scatter',
-              type: 'scatter', // Specifying type for this series
-              data: addJitterBelowXAxis(n_genes_data, -n_genes_variableB, n_genes_variableB),
-              color: 'rgba(124, 181, 236, 0.3)',
-              marker: { radius: 2 }
-          }
-      ]
-  };
-
-    optionsTotalCounts = {
-      chart: { type: 'column' }, // Default chart type can be set here
-      title: { text: 'Total Counts per Cell' },
-      xAxis: { title: { text: 'total_counts' } },
-      yAxis: { title: { text: 'Frequency' } },
-      tooltip: {
-          crosshairs: true, // Enables vertical line on hover
-          formatter: function () {
-              return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
-          }
-      },
-      series: [
-          {
-              name: 'total_counts Distribution',
-              type: 'column', // Specifying type for this series
-              data: total_counts_histogram,
-              color: 'rgba(144, 237, 125, 0.6)',
-              pointPadding: 0,
-              groupPadding: 0,
-              pointPlacement: 'between'
-          },
-          {
-              name: 'total_counts Scatter',
-              type: 'scatter', // Specifying type for this series
-              data: addJitterBelowXAxis(total_counts_data, -total_counts_variableB, total_counts_variableB),
-              color: 'rgba(144, 237, 125, 0.3)',
-              marker: { radius: 2 }
-          }
-      ]
-  };
-
-  optionsPCTCounts = {
-    chart: { type: 'column' }, // Default chart type can be set here
-    title: { text: 'Percentage of Mitochondrial Counts per Cell' },
-    xAxis: { title: { text: 'pct_counts_mt (%)' } },
-    yAxis: { title: { text: 'Frequency' } },
-    tooltip: {
-        crosshairs: true, // Enables vertical line on hover
-        formatter: function () {
-            return 'X-axis Value: ' + this.x + '<br>Y-axis Value: ' + this.y; // Display both axes
-        }
-    },
-    series: [
-        {
-            name: 'pct_counts_mt Distribution',
-            type: 'column', // Specifying type for this series
-            data: pct_counts_mt_histogram,
-            color: 'rgba(255, 188, 117, 0.6)',
-            pointPadding: 0,
-            groupPadding: 0,
-            pointPlacement: 'between'
+      setChartOptions({
+        chart: {
+            type: 'areasplinerange',
+            inverted: true,
+            events: {
+                click: function (event) {
+                    // Map the click x-coordinate to the data range
+                    const clickedValue = Math.round(event.xAxis[0].value); // Get x value of the click
+                    console.log(clickedValue);
+                    minMax.max = clickedValue; // Set maxValue to clicked percentage
+                    updateChart(parseFloat(0), minMax.max); // Update the chart
+                }
+            }
         },
-        {
-            name: 'pct_counts_mt Scatter',
-            type: 'scatter', // Specifying type for this series
-            data: addJitterBelowXAxis(pct_counts_mt_data, -pct_counts_mt_variableB, pct_counts_mt_variableB),
-            color: 'rgba(255, 188, 117, 0.3)',
-            marker: { radius: 2 }
-        }
-    ]
-  };
-  }
+        title: { text: '% Mitochondrial Reads (Interactive Violin Plot)' },
+        xAxis: {
+            reversed:false,
+            title: { text: 'Value (%)' },
+            min: minMax.min,
+            max: minMax.max
+        },
+        yAxis: {
+            title: { text: 'Density' },
+            categories: ["% Counts"],
+            startOnTick: false,
+            endOnTick: false
+        },
+        series: [
+            {
+                name: 'Highlighted Range',
+                color: 'rgba(255, 165, 0, 0.9)', // Highlighted range color
+                data: violinData.results[0]
+            },
+            {
+                name: 'Full Violin',
+                color: 'rgba(200, 200, 200, 0.5)', // Gray background color
+                data: violinData.results[0],
+                enableMouseTracking: false,
+                zIndex: -1
+            }
+        ]
+      });
+    }}, [plotData, minMax]);
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">
-      <div className="h-full w-1/3 flex justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white overflow-auto"> 
+      <div className="h-full w-1/3 justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white overflow-auto"> 
       <HighchartsReact className = "w-full h-full flex items-center justify-center"
         highcharts={Highcharts}
-        options={optionsNGenes}
+        options={chartOptions}
       />
+        <div className='flex justify-center '>
+          <label>Min: </label>
+          <input
+          type='number'
+          className='mr-2'
+          onChange={(e) => (minMax.min = parseFloat(e.target.value).toFixed(2))}
+          />
+
+          <label>Max: </label>
+          <input
+          type='number'
+          className='mr-2'
+          onChange={(e) => (minMax.max = parseFloat(e.target.value).toFixed(2))}
+          />
+        </div>
       </div>
-      <div className="h-full w-1/3 flex justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white  overflow-auto">
+
+      {/* <div className="h-full w-1/3 flex justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white  overflow-auto">
       <HighchartsReact className = "w-full h-full flex items-center justify-center"
         highcharts={Highcharts}
         options={optionsTotalCounts}
@@ -157,7 +117,7 @@ const ViolinPlot = ({plotData}) => {
         highcharts={Highcharts}
         options={optionsPCTCounts}
       />
-      </div>
+      </div> */}
     </div>
   );
 };

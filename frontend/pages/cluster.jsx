@@ -31,7 +31,7 @@ const Cluster = ({data: session, token}) => {
     socket.emit('RegisterConnection', selectedProject.user);
 
     socket.on('PA_Clustering_Complete', async (data)=>{
-      const {user, project, geneNames,clusters, stage} = data;
+      const {user, project, clusters, stage} = data;
       console.log('clustering is complete');
       //add info to clusters and gene names to context for annotations
       const clusterData = {};
@@ -39,7 +39,6 @@ const Cluster = ({data: session, token}) => {
         clusterData[`${i}`] = `${i}`;
       }
       setClusters(clusterData);
-      setGeneList(geneNames);
       setComplete(true);
     })
   }, [setClusters, setGeneList, setComplete])

@@ -1,4 +1,5 @@
 import { S3Client, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command  } from "@aws-sdk/client-s3";
+import { ENVVV } from "../../constants";
 
 export const s3Client = new S3Client({
   region: "us-west-2",
@@ -95,5 +96,18 @@ async function deleteProjectFromS3(project) {
     console.log(`Project ${projectPrefix} has been deleted`)
   }
 }
+async function getProjectValues(project){
+  console.log(`Getting project values from s3 for ${project.project_id}`);
+  const key = `${project.user}/${project.project_id}/project_values.json`;
+  const bucket = `cellborg-${ENVVV}-qcdataset-bucket`;
+  try {
+    const command = new GetObjectCommand({Bucket: bucket, Key: key });
+    const response = await s3Client.send(command);
+    const stringData = await response.Body.transformToString();
+    return JSON.parse(stringData);
+  } catch (err) {
+    console.error(`Error getting project values from s3, ${err}`);
+  }
+}
 
-export { checkIfPlotDataExists, getPlotData, getBinaryPlotData, getCSVPlotData, deleteProjectFromS3 };
+export { checkIfPlotDataExists, getPlotData, getBinaryPlotData, getCSVPlotData, deleteProjectFromS3, getProjectValues };

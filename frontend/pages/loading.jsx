@@ -2,17 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {MutatingDots} from 'react-loader-spinner'; 
 import io from 'socket.io-client';
-import {socketio} from '../constants.js';
-import { useProjectContext } from '../components/utils/projectContext';
-import { performQCMetricsPrePlot, beginPA} from '../components/utils/mongoClient.mjs';
-import { SpeciesToMt } from '../constants.js';
+import {socketio, SESSION_COOKIE, SpeciesToMt } from '../constants.js';
+import { useProjectContext, setGeneList} from '../components/utils/projectContext';
+import { performQCMetricsPrePlot, beginPA, updateProject} from '../components/utils/mongoClient.mjs';
+import {getProjectValues} from '../components/utils/s3client.mjs';
 import cookie from "cookie";
 import { get, set } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
 import { handleFinishQC } from '../components/utils/qcClient.mjs';
-import { updateProject } from '../components/utils/mongoClient.mjs';
 import { GoReport } from "react-icons/go";
-import {SESSION_COOKIE} from '../constants'
+import { getProjectValues } from '../components/utils/s3client.mjs';
 
 const Loading = ({data: token}) => {
   console.log("token:", token);
@@ -89,6 +88,13 @@ const Loading = ({data: token}) => {
         const {user, project, stage} = data;
 
         console.log(`PA ${stage} had been completed on project ${project} for ${user}`);
+        //pull gene list from project_values.json here
+        console.log("Getting gene list now...")
+        const project_values = getProjectValues(selectedProject);
+        const gene_list = project_values.gene_list;
+        console.log('gene list retrieved: ', gene_list);
+        setGeneList(geneNames);
+        console.log("finished setting gene list")
         router.push('/cluster');
     }),
     socket.on('PA_Running', async(data)=>{
