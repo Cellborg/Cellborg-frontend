@@ -89,7 +89,7 @@ const Loading = ({data: token}) => {
         console.log(`PA ${stage} had been completed on project ${project} for ${user}`);
         //pull gene list from project_values.json here
         console.log("Getting gene list now...")
-        const project_values = getProjectValues(selectedProject);
+        const project_values = await getProjectValues(selectedProject);
         console.log(project_values);
         const gene_list = project_values.gene_list;
         console.log('gene list retrieved: ', gene_list);
