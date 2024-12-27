@@ -13,7 +13,6 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
   const {name, status, nickname,dataset_id, species} = dataset;
 
   const {selectedProject} = useProjectContext();
-  const [showInfo,setShowInfo] = useState(false)
   const [rerunModal, setRerunModal] = useState(false);
   const [mouseIn, setMouseIn] = useState(true);
 
@@ -66,20 +65,8 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
       onDragStart={(e) => handleOnDrag(e)}
     >
       <div className='flex items-center space-x-2'>
-        <div className='relative'>
-          {showInfo && (
-            <div className='bg-blue border rounded-md p-2 absolute -translate-y-full whitespace-nowrap'>
-              <div>{nickname}</div>
-            </div>
-          )}
-          <IoIosInformationCircleOutline
-            className='w-4 h-4 cursor-pointer'
-            onMouseEnter={() => setShowInfo(true)}
-            onMouseLeave={() => setShowInfo(false)}
-          />
-        </div>
-        <FcOpenedFolder className='w-5 h-5' />
-        <div className='text-sm text-black'>
+        <FcOpenedFolder className='w-8 h-8' />
+        <div className='text-sm text-black pr-5'>
           {editmode?(
                 <input type="text" placeholder={name} onChange={handleInputChange}></input>
               ):
@@ -93,7 +80,7 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
           <div className="mt-2">
             <button
               onClick={newQCButtonClick}
-              className="bg-blue text-white py-0.5 px-1.5 rounded-md"
+              className="bg-blue text-white py-0.5 px-1.5 rounded-md hover:bg-cyan hover:text-blue"
             >
               QC
             </button>
@@ -109,7 +96,7 @@ const DatasetFolder = ({dataset, editmode, onUpdateDataset, token}) => {
           </div>
         )}
         </> : <></>}
-        <h1 className= 'pl-10'>{species}</h1>
+        <h1 className= 'pl-3'>{species}</h1>
         <div>
           {rerunModal && (
               <RerunModal

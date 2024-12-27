@@ -2,9 +2,8 @@ import React, {useState} from 'react';
 import { useProjectContext } from '../utils/projectContext';
 import { loadCPlot } from '../utils/mongoClient.mjs';
 
-export const ClusterPlotForm = ({ setIsDataLoading, setClusterPlotKey, token }) => {
+export const ClusterPlotForm = ({ setIsDataLoading, setClusterPlotKey, token, resolutionValue, setResolutionValue}) => {
 
-    const [resolutionValue, setResolutionValue] = useState(1);
     const { selectedProject} = useProjectContext();
 
     function generateClusterPlotKey(resolution) {

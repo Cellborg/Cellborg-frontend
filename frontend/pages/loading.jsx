@@ -2,24 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {MutatingDots} from 'react-loader-spinner'; 
 import io from 'socket.io-client';
-import {socketio} from '../constants.js';
-import { useProjectContext } from '../components/utils/projectContext';
-import { performQCMetricsPrePlot, beginPA} from '../components/utils/mongoClient.mjs';
-import { SpeciesToMt } from '../constants.js';
+import {socketio, SESSION_COOKIE, SpeciesToMt } from '../constants.js';
+import { useProjectContext} from '../components/utils/projectContext';
+import { performQCMetricsPrePlot, beginPA, updateProject} from '../components/utils/mongoClient.mjs';
 import cookie from "cookie";
 import { get, set } from 'idb-keyval'
 import BugReportForm from '../components/BugReportForm';
 import { handleFinishQC } from '../components/utils/qcClient.mjs';
-import { updateProject } from '../components/utils/mongoClient.mjs';
 import { GoReport } from "react-icons/go";
-import {SESSION_COOKIE} from '../constants'
+import { getProjectValues } from '../components/utils/s3client.mjs';
 
 const Loading = ({data: token}) => {
   console.log("token:", token);
   const router = useRouter();
   const { task,dataset,name,species} = router.query;
-  const { selectedProject, setSelectedProject, setProjects, projects } = useProjectContext();
+  const { selectedProject, setSelectedProject, setProjects, projects, setGeneList } = useProjectContext();
   const [showForm,setShowForm]=useState(false);
+  const [isQC, setisQC] = useState(true)
   
   console.log("Selected project is:", selectedProject);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,16 +87,27 @@ const Loading = ({data: token}) => {
         const {user, project, stage} = data;
 
         console.log(`PA ${stage} had been completed on project ${project} for ${user}`);
+        //pull gene list from project_values.json here
+        console.log("Getting gene list now...")
+        const project_values = await getProjectValues(selectedProject);
+        console.log(project_values);
+        const gene_list = project_values.gene_list;
+        console.log('gene list retrieved: ', gene_list);
+        setGeneList(gene_list);
+        console.log("finished setting gene list")
         router.push('/cluster');
     }),
     socket.on('PA_Running', async(data)=>{
       const {user, stage} = data;
       
       //create list of datasets
+      setIsLoading(false);
+      setisQC(false);
       const datasets = selectedProject.datasets.map(proj=>proj.dataset_id);
       console.log("datasets for pa are here: ", datasets);
       const PAresponse = await beginPA(selectedProject.user, selectedProject.project_id,datasets, token);
       console.log('Response for starting pa is: ', PAresponse);
+      
     })
   
   )
@@ -129,7 +139,12 @@ const Loading = ({data: token}) => {
       wrapperClass="flex justify-center item-center"
       visible={true}
     />
-    {isLoading ? <div>Starting ECS Task...</div> : <div>Performing QC...</div>}
+    {isLoading ? <div>Starting ECS Task...</div>
+     :
+     <>
+     {isQC ? 
+      <div>Performing QC...</div>:<div>Performing Processing and Annotations...</div>
+     }</> }
     </div>
   )
 }

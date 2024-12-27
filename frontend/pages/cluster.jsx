@@ -17,28 +17,28 @@ import io from 'socket.io-client';
 const DynamicScatterPlot = dynamic(() => import('../components/plots/ScatterPlot'), {
   ssr: false,
 });
-
+ 
 const Cluster = ({data: session, token}) => {
   const [clusterPlotKey, setClusterPlotKey] = useState("");
   const [complete, setComplete] = useState(false);
   const [isDataLoading, setIsDataLoading]=useState(false);
   const {selectedProject, setClusters, setGeneList} = useProjectContext();
   const [showForm,setShowForm]=useState(false);
+  const [resolutionValue, setResolutionValue] = useState(1);
 
   useEffect(()=>{
     const socket = io(socketio);
     socket.emit('RegisterConnection', selectedProject.user);
 
     socket.on('PA_Clustering_Complete', async (data)=>{
-      const {user, project, geneNames,clusters, stage} = data;
-
+      const {user, project, clusters, stage} = data;
+      console.log('clustering is complete');
       //add info to clusters and gene names to context for annotations
       const clusterData = {};
       for (let i = 0; i < clusters.length; i++) {
         clusterData[`${i}`] = `${i}`;
       }
       setClusters(clusterData);
-      setGeneList(geneNames);
       setComplete(true);
     })
   }, [setClusters, setGeneList, setComplete])
@@ -50,8 +50,13 @@ const Cluster = ({data: session, token}) => {
   
   const renderPlots = () => {
     if (complete) {
+      console.log('Rendering plot now');
       return (
-        <DynamicScatterPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} setIsDataLoading={setIsDataLoading}/>
+        <DynamicScatterPlot 
+        plotKey={clusterPlotKey} 
+        bucket={datasetqcBucket} 
+        setIsDataLoading={setIsDataLoading}
+        />
       );
     }
     return null;
@@ -73,7 +78,12 @@ const Cluster = ({data: session, token}) => {
       <div className='flex flex-row mt-3'>
         <div className='p-4 ml-5 border border-blue rounded-lg bg-white w-[13vw] h-[85vh]'>
 
-          <ClusterPlotForm setIsDataLoading={setIsDataLoading} setClusterPlotKey={setClusterPlotKey} token={token}/>
+          <ClusterPlotForm 
+          setIsDataLoading={setIsDataLoading} 
+          setClusterPlotKey={setClusterPlotKey} 
+          token={token}         
+          resolutionValue={resolutionValue}
+          setResolutionValue={setResolutionValue}/>
 
         </div>
         <div className='ml-5 rounded-lg border border-blue p-1 bg-white' style={{height:'85vh', width:'82vw',position:'relative'}}>
@@ -95,8 +105,8 @@ const Cluster = ({data: session, token}) => {
         </div> 
       </div>
       <div className="flex justify-center">
-        <div className={`w-1/3 mt-2 text-white`}>
-          <NextButton path={`/Annotations?res=${parseInt(resolution*100)}`} complete={complete}/>
+         <div className={`w-1/3 mt-2 text-white`}>
+          <NextButton path={`/Annotations?res=${parseInt(resolutionValue*100)}`} complete={complete}/>
         </div>
       </div>
     </div>

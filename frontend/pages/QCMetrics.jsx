@@ -17,7 +17,7 @@ import {performQCDoublets} from '../components/utils/mongoClient.mjs';
 const DynamicViolinPlot = dynamic(() => import('../components/plots/ViolinPlot.jsx'), {
   ssr: false,
   loading: () => <div>Loading Violin Plot...</div>,
-});
+}); 
 const DynamicFeatureScatterPlot = dynamic(() => import('../components/plots/FeatureScatterPlot.jsx'), {ssr: false});
 
 const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => {
