@@ -215,14 +215,13 @@ async function loadVlnPlots(user, project, analysis, genes, token) {
     return await mongoRequest('analysis/loadVlnPlots', data, token);
 };
 
-async function annotateClusters(user, project, analysis, annotations, token) {
+async function annotateClusters(user, project, annotations, token) {
     const data = {
         user: user,
         project: project,
-        analysisId: analysis,
         annotations: JSON.stringify(annotations)
     };
-    return await mongoRequest('analysis/annotateClusters', data, token);
+    return await mongoRequest('pa/annotations', data, token);
 };
 
 async function psuedotimeAnalysis(user, project, analysis, points, token) {

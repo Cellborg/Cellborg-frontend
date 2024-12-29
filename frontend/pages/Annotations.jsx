@@ -44,13 +44,17 @@ const Annotations = ({data: session, token, resolution}) => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [annotationsLoaded, setAnnotationsLoaded] = useState(true);
-    const {selectedProject, analysisId, clusters, setClusters} = useProjectContext();
+    const {selectedProject, analysisId, clusters, setClusters, geneList, setGeneList} = useProjectContext();
     const [geneNames, setGeneNames] = useState(null);
     const [ready, setReady] = useState(false);
     const [annotations, setAnnotations] = useState(clusters);
     const [showForm,setShowForm]=useState(false);
 
-    useEffect(() => {
+
+    /**
+     * Already pull gene names on adata init during loading
+     */
+    /*useEffect(() => {
         const geneNamesKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/geneNames.json`
         getPlotData(projectGeneNameBucket, geneNamesKey)
         .then((data) => {
@@ -59,11 +63,11 @@ const Annotations = ({data: session, token, resolution}) => {
         .catch((error) => {
             console.error('Error setting the gene names:', error);
         });
-      }, [selectedProject, analysisId]);
+      }, [selectedProject, analysisId]);*/
 
-    const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/n=${n}&c=${c}&d=${d}&r=${r}.json`
-    const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/dotplot.json`
-    const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/vlnplots.json`
+    const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${resolution}.json`
+    const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/dotplot.json`
+    const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/vlnplots.json`
 
     const handleSaveAnnotations = async() => {
         console.log("Annotations: ", annotations);
@@ -80,7 +84,6 @@ const Annotations = ({data: session, token, resolution}) => {
             const res = await annotateClusters(
                 selectedProject.user, 
                 selectedProject.project_id, 
-                analysisId, 
                 correctedAnnotations, 
                 token
             );
@@ -132,7 +135,6 @@ const Annotations = ({data: session, token, resolution}) => {
                 gene_name: genes[0],
                 user: selectedProject.user,
                 project: selectedProject.project_id,
-                analysisId: analysisId
             }
             try {
                 await loadGeneFeaturePlot(data, token);          
@@ -141,13 +143,13 @@ const Annotations = ({data: session, token, resolution}) => {
             }
         } else if (selectedPlotType === "Dot Plot") {
             try {
-                await loadDotPlot(selectedProject.user, selectedProject.project_id, analysisId, genes, token);          
+                await loadDotPlot(selectedProject.user, selectedProject.project_id, genes, token);          
             } catch (error) {
                 console.error('Error processing the dot plot:', error);
             }
         } else if (selectedPlotType === "Violin Plot") {
             try {
-                await loadVlnPlots(selectedProject.user, selectedProject.project_id, analysisId, genes, token);          
+                await loadVlnPlots(selectedProject.user, selectedProject.project_id, genes, token);          
             } catch (error) {
                 console.error('Error processing the violin plots:', error);
             }
@@ -184,7 +186,7 @@ const Annotations = ({data: session, token, resolution}) => {
                         </div>
                     ))}
                 </div>
-                <GeneNamesList items={geneNames} handleItemSelect={handleItemSelect} className='w-full'/>
+                <GeneNamesList items={geneList} handleItemSelect={handleItemSelect} className='w-full'/>
                 <div className="flex mt-10 mb-10 p-3 ml-3 space-x-4 z-0">
                     <label className="flex items-center cursor-pointer" title={genes.length !== 1 ? 'Select one gene for a Feature Plot' : ''}>
                         <input type="radio" name="plotType" value="Feature Plot" disabled={genes.length === 0 || genes.length > 1} className="form-radio text-blue-500" onChange={() => setSelectedPlotType('Feature Plot')}/>
@@ -276,7 +278,7 @@ const Annotations = ({data: session, token, resolution}) => {
 export async function getServerSideProps(context) {
     // Get the user's JWT access token from next's server-side cookie
     const token = await getToken(context);
-    const resolution = context.query;
+    const resolution = parseInt(context.query.res, 10);//parse as radix
     console.log(resolution);
     if (!token) {
       return {
