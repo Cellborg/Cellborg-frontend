@@ -153,15 +153,8 @@ const Annotations = ({data: session, token, resolution}) => {
         const response = await conductGeneExpression(data, token);
         console.log('Made request here is the response', response);
 
-        //move fetching to on event when gene expression is done
-        //load json data here from s3 then load selected plot based on data here
-        getPlotData(datasetqcBucket, `${selectedProject.user}/${selectedProject.project_id}`)
-        .then((data)=>{
-            //replace with populating graphs
-            console.log(data)
-        })
 
-        if (selectedPlotType === "Feature Plot" && genes.length === 1) {
+        /*if (selectedPlotType === "Feature Plot" && genes.length === 1) {
             setGeneFeature(genes[0]);
             console.log("Getting feature plot data", genes[0]);
             const data = {
@@ -188,7 +181,7 @@ const Annotations = ({data: session, token, resolution}) => {
             }
         } else {
             console.log("Unknown plot type chosen: ", selectedPlotType);
-        }
+        }*/
     };
 
     return (
