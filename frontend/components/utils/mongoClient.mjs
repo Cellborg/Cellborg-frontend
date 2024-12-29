@@ -156,7 +156,9 @@ async function loadCPlot(data, token) {
     
     return await mongoRequest('pa/clustering', data, token);
 };
-
+async function conductGeneExpression(data, token){
+    return await mongoRequest('pa/geneexpression', data, token)
+}
 
 /*ANALYSIS REQUESTS */
 async function begin(prefix) {

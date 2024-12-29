@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import { getSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import {MutatingDots} from 'react-loader-spinner';
-import { loadDotPlot, loadVlnPlots, annotateClusters, loadGeneFeaturePlot } from '../components/utils/mongoClient.mjs'
+import { loadDotPlot, loadVlnPlots, annotateClusters, loadGeneFeaturePlot, conductGeneExpression } from '../components/utils/mongoClient.mjs'
 import { getPlotData } from '../components/utils/s3client.mjs';
 import { useProjectContext } from '../components/utils/projectContext';
-import { datasetclusterBucket, DOTPLOT_BUCKET, VLN_PLOTS_BUCKET, genefeatBucket, projectGeneNameBucket } from '../constants';
+import { datasetclusterBucket, DOTPLOT_BUCKET, VLN_PLOTS_BUCKET, genefeatBucket, projectGeneNameBucket, datasetqcBucket } from '../constants';
 import SocketComponent from '../components/SocketComponent';
 import { NextButton } from '../components/NextButton';
 import { getToken } from '../components/utils/security.mjs';
@@ -121,13 +121,31 @@ const Annotations = ({data: session, token, resolution}) => {
     const handleItemRemove = (itemToRemove) => {
         setGenes(prevGenes => prevGenes.filter(item => item !== itemToRemove));
     };
-
     const handleLoadPlot = async() => {
         console.log('Loading', selectedPlotType, 'for:', genes);
         setLoadedPlot(selectedPlotType);
         //setIsLoading(true);
         setActiveTab('other'); 
         setReady(false);
+
+        //make request to gene expression here or below
+        const data={
+            user: selectedProject.user, 
+            project: selectedProject.project_id,
+            gene_list: genes
+        }
+        console.log("about to make request to gene expression");
+        const response = await conductGeneExpression(data, token);
+        console.log('Made request here is the response', response);
+
+        //move fetching to on event when gene expression is done
+        //load json data here from s3 then load selected plot based on data here
+        getPlotData(datasetqcBucket, `${selectedProject.user}/${selectedProject.project_id}`)
+        .then((data)=>{
+            //replace with populating graphs
+            console.log(data)
+        })
+
         if (selectedPlotType === "Feature Plot" && genes.length === 1) {
             setGeneFeature(genes[0]);
             console.log("Getting feature plot data", genes[0]);
