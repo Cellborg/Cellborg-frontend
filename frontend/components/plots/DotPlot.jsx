@@ -3,7 +3,7 @@ import { getPlotData } from "../utils/s3client.mjs";
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 
-const DotPlot = async ({ plotKey, bucket}) => {
+const DotPlot = ({ plotKey, bucket}) => {
     const [data, setData] = useState(null);
     const [chartOptions, setChartOptions] = useState(null);
     /**
@@ -98,7 +98,6 @@ const DotPlot = async ({ plotKey, bucket}) => {
             return matrix;
         }
         try {
-            const data = await loadJSON(jsonFilePath);
             const { clusters, genes, metrics } = processData(data);
             const matrix = createMatrix(metrics, clusters, genes);
         
