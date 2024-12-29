@@ -281,7 +281,7 @@ async function collectGenenames(geneNameRequest) {
 
 
 export { getProjects, getProject, deleteProject, updateProject, createProject, getMetadata, signUp, getUser, deleteUser,
-loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets,prepPA,beginPA, begin, varfeatureanalysis, loadGeneFeaturePlot,
+loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets,prepPA,beginPA,conductGeneExpression, begin, varfeatureanalysis, loadGeneFeaturePlot,
 newAnalysisId, beginAnalysis, loadCPlot, collectGenenames, heatmapanalysis, psuedotimeAnalysis, loadDotPlot, loadVlnPlots, 
 annotateClusters, findAllMarkersAnalysis, findMarkersAnalysis,sendAccountRequest,sendReportBug,newDatasetId }
 
