@@ -14,6 +14,8 @@ import { getToken } from '../components/utils/security.mjs';
 import PagesNavbar from '../components/PagesNavbar';
 import { GoReport } from "react-icons/go";
 import BugReportForm from '../components/BugReportForm';
+import { socketio } from '../constants';
+import io from 'socket.io-client';
 
 const ClusteringPlot = dynamic(() => import('../components/plots/ScatterPlot'), {ssr: false});
 const ViolinPlot = dynamic(() => import('../components/plots/VlnPlots'), {ssr: false});
@@ -50,7 +52,6 @@ const Annotations = ({data: session, token, resolution}) => {
     const [annotations, setAnnotations] = useState(clusters);
     const [showForm,setShowForm]=useState(false);
 
-
     /**
      * Already pull gene names on adata init during loading
      */
@@ -65,8 +66,22 @@ const Annotations = ({data: session, token, resolution}) => {
         });
       }, [selectedProject, analysisId]);*/
 
+    /**
+     * Listen for gene expression finishing so frontend can pull data from s3
+     */
+    useEffect(()=>{
+    const socket = io(socketio);
+    socket.emit('RegisterConnection', selectedProject.user);
+
+    socket.on('PA_Gene_Expression_Complete', async (data)=>{
+        const {user, project, stage} = data;
+        console.log('gene expression has finished and sns reached frontend');
+        setReady(true);
+    })
+    }, [])
+
     const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${resolution}.json`
-    const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/dotplot.json`
+    const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
     const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/vlnplots.json`
 
     const handleSaveAnnotations = async() => {
@@ -188,7 +203,7 @@ const Annotations = ({data: session, token, resolution}) => {
             <GoReport />
         </div>
         <PagesNavbar page={"ANNOTATIONS"}/>
-        <SocketComponent user={selectedProject.user} setComplete={setReady} step={selectedPlotType ? selectedPlotType.replace(' ', '') : ''} />
+        {/* <SocketComponent user={selectedProject.user} setComplete={setReady} step={selectedPlotType ? selectedPlotType.replace(' ', '') : ''} /> */}
         <div className='flex flex-row justify-center mt-10'>
             <div className='w-1/3 ml-3 p-3'>
                 <div className="flex flex-wrap p-2 mb-5 border border-gray-300 h-16 overflow-auto">
@@ -258,9 +273,9 @@ const Annotations = ({data: session, token, resolution}) => {
                                     visible={true}
                                 /> :
                             activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetclusterBucket} /> :
-                            loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot user={selectedProject.user} project={selectedProject.project_id} analysis={analysisId} bucket={genefeatBucket} gene={geneFeature}/> :
+                            loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot user={selectedProject.user} project={selectedProject.project_id} bucket={genefeatBucket} gene={geneFeature}/> :
                             loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={VLN_PLOTS_BUCKET} clusters={clusters} /> :
-                            loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={DOTPLOT_BUCKET} clusters={clusters} /> : null : null
+                            loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={datasetqcBucket}/> : null : null
                         }
                     </motion.div>
                     <motion.div
