@@ -265,7 +265,7 @@ const Annotations = ({data: session, token, resolution}) => {
                                     wrapperClass="h-full flex items-center justify-center"
                                     visible={true}
                                 /> :
-                            activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetclusterBucket} /> :
+                            activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} /> :
                             loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot user={selectedProject.user} project={selectedProject.project_id} bucket={genefeatBucket} gene={geneFeature}/> :
                             loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={VLN_PLOTS_BUCKET} clusters={clusters} /> :
                             loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={datasetqcBucket}/> : null : null
