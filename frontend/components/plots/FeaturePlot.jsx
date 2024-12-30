@@ -90,8 +90,8 @@ const FeaturePlot = ({bucket, plotKey, gene }) => {
             }
         },
         colorAxis: {
-            min: minEpcam,
-            max: maxEpcam,
+            min: minGene,
+            max: maxGene,
             minColor: '#00FF00', // Light green
             maxColor: '#0000FF', // Light blue
             stops: [
@@ -99,7 +99,7 @@ const FeaturePlot = ({bucket, plotKey, gene }) => {
                 [1, '#0000FF']  // Light blue
             ],
             title: {
-                text: 'Epcam Value'
+                text: `${gene} Value`
             }
         },
         tooltip: {
@@ -107,7 +107,7 @@ const FeaturePlot = ({bucket, plotKey, gene }) => {
                 return `<strong>${this.series.name}</strong><br>
                         UMAP1: ${this.x}<br>
                         UMAP2: ${this.y}<br>
-                        Epcam: ${this.point.value}`; // Show Epcam value
+                        ${gene}: ${this.point.value}`; // Show gene value
             }
         },
         plotOptions: {
