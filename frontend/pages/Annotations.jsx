@@ -82,6 +82,7 @@ const Annotations = ({data: session, token, resolution}) => {
 
     const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${resolution}.json`
     const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
+    const featurePlotkey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
     const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/vlnplots.json`
 
     const handleSaveAnnotations = async() => {
@@ -266,7 +267,7 @@ const Annotations = ({data: session, token, resolution}) => {
                                     visible={true}
                                 /> :
                             activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} /> :
-                            loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot user={selectedProject.user} project={selectedProject.project_id} bucket={genefeatBucket} gene={geneFeature}/> :
+                            loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot bucket={datasetqcBucket} featurePlotkey={featurePlotkey} gene={genes[0]}/> :
                             loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={VLN_PLOTS_BUCKET} clusters={clusters} /> :
                             loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={datasetqcBucket}/> : null : null
                         }

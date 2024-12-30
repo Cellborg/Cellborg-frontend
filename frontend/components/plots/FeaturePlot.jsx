@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
 import { getPlotData } from '../utils/s3client.mjs';
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
+import HighchartsMore from 'highcharts/highcharts-more';
+import HighchartsColorAxis from 'highcharts/modules/coloraxis';
+HighchartsMore(Highcharts);
+HighchartsColorAxis(Highcharts);
 
-const FeaturePlot = ({ user, project, analysis, bucket, gene }) => {
+const FeaturePlot = ({bucket, plotKey, gene }) => {
   const [plotData, setPlotData] = useState(null);
+  const [chartOptions, setChartOptions] = useState({})
 
   useEffect(() => {
-    const plotKey = `${user}/${project}/${analysis}/${gene}/featurePlot.json`;
     console.log('Key:', plotKey);
     console.log('Bucket:', bucket);
     const fetchPlotData = async () => {
@@ -22,56 +27,145 @@ const FeaturePlot = ({ user, project, analysis, bucket, gene }) => {
     }
   }, [user, project, analysis, bucket, gene]);
 
-  const selectedGene = gene ? gene.toString() : "";
-  let trace1;
-  if(plotData) {
-    const customColorScale = [
-        [0, `rgba(128, 128, 128, 0.5)`],    // Expression level 0 mapped to gray
-        [1, 'blue'],    // Expression level 1 mapped to blue
-    ];    
-    
-      const expressionValues = plotData.map(data => data[selectedGene] || 0);
-      const minExpression = Math.min(...expressionValues);
-      const maxExpression = Math.max(...expressionValues);
-      
-      const normalizedColorValues = expressionValues.map(value =>
-        (value - minExpression) / (maxExpression - minExpression)
-      );  
-    
-      trace1 = {
-          x: plotData.map(data => data.tSNE_1 || data.PCA_1 || data.UMAP_1),
-          y: plotData.map(data => data.tSNE_2 || data.PCA_2 || data.UMAP_2),
-          mode: 'markers',
-          type: 'scatter',
-          marker: {
-            size: 2,
-            color: normalizedColorValues, 
-            colorscale: customColorScale, 
-            colorbar: {
-              title: 'Expression Level'
-            }
-          },
-          text: plotData.map(data => data._row),
-          hovertemplate: `<b>${selectedGene}</b><br>Expression Level: %{marker.color:.2f}`,
+  useEffect(()=>{
+    if(plotData) {
+      const dataArray = Object.values(plotData);
+
+      const clusters = {};
+      const geneValues = [];
+
+      dataArray.forEach(elm => {
+        if (!clusters[elm["cluster"]]) {
+            clusters[elm["cluster"]] = [];
+        }
+        clusters[elm.cluster].push([elm["UMAP1"], elm["UMAP2"], elm[gene]]);
+        geneValues.push(elm[gene]); // Collect gene values
+      });
+      const minGene = Math.min(...geneValues);
+      const maxGene = Math.max(...geneValues);
+
+      const getColor = (value) => {
+        const ratio = (value - minGene) / (maxGene - minGene);
+        const green = Math.round(255 - ratio * 255 * 0.9); // Decrease green for lighter color
+        const blue = Math.round(ratio * 255 * 0.5); // Increase blue for lighter color
+        return `rgb(0, ${green}, ${blue})`; // Return RGB color
       };
-    
-  }
+
+      const series = Object.keys(clusters).map(cluster => ({
+        name: `Cluster ${cluster}`,
+        id: cluster,
+        data: clusters[cluster].map((point, index) => ({
+            x: point[0],
+            y: point[1],
+            color: getColor(point[2]), // Assign color based on gene
+            value: point[2] // Store gene value for color axis
+        })),
+        marker: {
+            symbol: 'circle'
+        }
+      }));
+      setChartOptions({
+        chart: {
+            type: 'scatter',
+            zooming: {
+                type: 'xy'
+            },
+            boost: {
+                enabled: true,
+                useGPUTranslations: true,
+                seriesThreshold: 1
+            }
+        },
+        title: {
+            text: 'Clustering of Cells'
+        },
+        xAxis: {
+            title: {
+                text: 'UMAP1'
+            }
+        },
+        yAxis: {
+            title: {
+                text: 'UMAP2'
+            }
+        },
+        colorAxis: {
+            min: minEpcam,
+            max: maxEpcam,
+            minColor: '#00FF00', // Light green
+            maxColor: '#0000FF', // Light blue
+            stops: [
+                [0, '#00FF00'], // Light green
+                [1, '#0000FF']  // Light blue
+            ],
+            title: {
+                text: 'Epcam Value'
+            }
+        },
+        tooltip: {
+            formatter: function () {
+                return `<strong>${this.series.name}</strong><br>
+                        UMAP1: ${this.x}<br>
+                        UMAP2: ${this.y}<br>
+                        Epcam: ${this.point.value}`; // Show Epcam value
+            }
+        },
+        plotOptions: {
+            series: {
+                turboThreshold: 10000,
+                states: {
+                    hover: {
+                        enabled: true,
+                        marker: {
+                            fillOpacity: 1 // Ensure hovered points are fully visible
+                        },
+                        // Highlight other points in the same cluster
+                        events: {
+                            mouseOver: function () {
+                                const clusterId = this.options.id;
+                                this.chart.series.forEach(series => {
+                                    if (series.name === `Cluster ${clusterId}`) {
+                                        series.data.forEach(point => {
+                                            point.graphic.attr({
+                                                fillOpacity: 1 // Highlight all points in the same cluster
+                                            });
+                                        });
+                                    }
+                                });
+                            },
+                            mouseOut: function () {
+                                this.chart.series.forEach(series => {
+                                    series.data.forEach(point => {
+                                        point.graphic.attr({
+                                            fillOpacity: 0.5 // Reset opacity
+                                        });
+                                    });
+                                });
+                            }
+                        }
+                    }
+                }
+            },
+            scatter: {
+                marker: {
+                    fillOpacity: 0.5,
+                    radius: 2.5,
+                    symbol: 'circle'
+                }
+            }
+        },
+        series
+      });
+    }
+  }, [plotData])
 
   return (
     <div className="flex justify-center items-center w-full h-full overflow-auto">
-            <Plot
-              className="w-full h-full flex justify-center items-center"
-              data={[trace1]}
-              layout={{
-                  title: selectedGene,
-                  xaxis: {showgrid: false, zeroline: false, showticklabels: false},
-                  yaxis: {showgrid: false, zeroline: false, showticklabels: false}
-                }}
-
-              config={{displaylogo: false}}
-              responsive={true}
-
-            />
+      {chartOptions ? (
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+      ) : (
+        <div>Setting Feature Plot Data...</div>
+      )} 
     </div>
   );
 };
