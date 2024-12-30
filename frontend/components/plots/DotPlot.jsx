@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { getPlotData } from "../utils/s3client.mjs";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import HighchartsMore from 'highcharts/highcharts-more';
+HighchartsMore(Highcharts);
 
 const DotPlot = ({ plotKey, bucket }) => {
   const [data, setData] = useState(null);
