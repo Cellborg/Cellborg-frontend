@@ -25,7 +25,7 @@ const FeaturePlot = ({bucket, plotKey, gene }) => {
     if (plotKey && bucket) {
       fetchPlotData();
     }
-  }, [user, project, analysis, bucket, gene]);
+  }, [bucket, plotKey, gene]); //want it to change whenever the gene passed in changes since bucket and key won't
 
   useEffect(()=>{
     if(plotData) {
