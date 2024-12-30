@@ -159,6 +159,14 @@ async function loadCPlot(data, token) {
 async function conductGeneExpression(data, token){
     return await mongoRequest('pa/geneexpression', data, token)
 }
+async function annotateClusters(user, project, annotations, token) {
+    const data = {
+        user: user,
+        project: project,
+        annotations: JSON.stringify(annotations)
+    };
+    return await mongoRequest('pa/annotations', data, token);
+};
 
 /*ANALYSIS REQUESTS */
 async function begin(prefix) {
@@ -215,15 +223,6 @@ async function loadVlnPlots(user, project, analysis, genes, token) {
         genes: JSON.stringify(genes)
     };
     return await mongoRequest('analysis/loadVlnPlots', data, token);
-};
-
-async function annotateClusters(user, project, annotations, token) {
-    const data = {
-        user: user,
-        project: project,
-        annotations: JSON.stringify(annotations)
-    };
-    return await mongoRequest('pa/annotations', data, token);
 };
 
 async function psuedotimeAnalysis(user, project, analysis, points, token) {

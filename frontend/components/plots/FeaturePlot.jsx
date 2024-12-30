@@ -76,9 +76,6 @@ const FeaturePlot = ({bucket, plotKey, gene }) => {
                 seriesThreshold: 1
             }
         },
-        title: {
-            text: 'Clustering of Cells'
-        },
         xAxis: {
             title: {
                 text: 'UMAP1'
