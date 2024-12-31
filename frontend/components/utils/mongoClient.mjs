@@ -163,7 +163,7 @@ async function annotateClusters(user, project, annotations, token) {
     const data = {
         user: user,
         project: project,
-        annotations: JSON.stringify(annotations)
+        annotations: annotations
     };
     return await mongoRequest('pa/annotations', data, token);
 };
