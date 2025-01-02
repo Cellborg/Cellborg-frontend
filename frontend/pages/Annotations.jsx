@@ -19,6 +19,7 @@ import io from 'socket.io-client';
 import { useRouter } from 'next/router';
 import {handleFinishPA} from '../components/utils/qcClient.mjs';
 import { get, set } from 'idb-keyval'
+import {updateProject} from '../components/utils/mongoClient.mjs';
 
 const ClusteringPlot = dynamic(() => import('../components/plots/ScatterPlot'), {ssr: false});
 const ViolinPlot = dynamic(() => import('../components/plots/VlnPlots'), {ssr: false});
@@ -49,7 +50,7 @@ const Annotations = ({data: session, token, resolution}) => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [annotationsLoaded, setAnnotationsLoaded] = useState(true);
-    const {selectedProject, setSelectedProject, clusters, setClusters, geneList, setGeneList} = useProjectContext();
+    const {selectedProject, setSelectedProject, setProjects, clusters, setClusters, geneList} = useProjectContext();
     const [geneNames, setGeneNames] = useState(null);
     const [ready, setReady] = useState(false);
     const [annotations, setAnnotations] = useState(clusters);
@@ -92,14 +93,12 @@ const Annotations = ({data: session, token, resolution}) => {
 
     const finishPA = async () => {
         try{
-            const response = handleFinishPA(selectedProject.user, selectedProject.project_id, router, token);
+            const response = await handleFinishPA(selectedProject.user, selectedProject.project_id, router, token);
             console.log('Finished PA:', response);
 
             const projectList = await get('cachedProjects');
             console.log("project list:", projectList)
             const projIdx = projectList.findIndex(p => p.project_id == selectedProject.project_id);
-            //console.log(projIdx)
-            //const dataIdx = projectList[projIdx].datasets.findIndex(d => d.dataset_id === dataset);
     
             if (projectList[projIdx].status !== 'PAcomplete') {
                 projectList[projIdx].status ='PAcomplete';
