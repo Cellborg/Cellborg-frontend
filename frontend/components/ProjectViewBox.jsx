@@ -473,7 +473,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                      <div className="bottom-0 flex justify-start mt-5">
     <button className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' onClick={handleEdit}>Edit</button>
     
-    {selectedProject.status !== 'PAComplete' ? (
+    {selectedProject.status !== 'PAcomplete' ? (
         <button 
             className={`border px-2 py-1 m-2 rounded-md ${qcCompleted() ? 'hover:bg-cyan' : 'bg-gray-400 cursor-not-allowed'}`} 
             onClick={handlePARun} 
