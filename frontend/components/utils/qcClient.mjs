@@ -74,4 +74,4 @@ async function handleFinishAnalysis(user, project, analysisId, router, token) {
     }
   }
   
-  export { handleFinishQC, handleFinishAnalysis }
+  export { handleFinishQC, handleFinishAnalysis, handleFinishPA }

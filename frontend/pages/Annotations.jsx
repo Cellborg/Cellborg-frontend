@@ -16,6 +16,8 @@ import { GoReport } from "react-icons/go";
 import BugReportForm from '../components/BugReportForm';
 import { socketio } from '../constants';
 import io from 'socket.io-client';
+import { useRouter } from 'next/router';
+import {handleFinishPA} from '../components/utils/qcClient.mjs';
 
 const ClusteringPlot = dynamic(() => import('../components/plots/ScatterPlot'), {ssr: false});
 const ViolinPlot = dynamic(() => import('../components/plots/VlnPlots'), {ssr: false});
@@ -51,6 +53,8 @@ const Annotations = ({data: session, token, resolution}) => {
     const [ready, setReady] = useState(false);
     const [annotations, setAnnotations] = useState(clusters);
     const [showForm,setShowForm]=useState(false);
+    const [complete, setComplete] = useState(false);
+    const router = useRouter();
 
     /**
      * Already pull gene names on adata init during loading
@@ -85,6 +89,17 @@ const Annotations = ({data: session, token, resolution}) => {
     const featurePlotkey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
     const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/vlnplots.json`
 
+    const finishPA = async () => {
+        try{
+            const response = handleFinishPA(selectedProject.user, selectedProject.project_id, router, token);
+            console.log('Finished PA:', response);
+            router.push('/dashboard');
+        }catch(err){
+            console.error('Error finishing PA:', err);
+            router.push('/dashboard');
+        }
+
+    };
     const handleSaveAnnotations = async() => {
         console.log("Annotations: ", annotations);
 
@@ -104,6 +119,7 @@ const Annotations = ({data: session, token, resolution}) => {
                 token
             );
             setClusters(correctedAnnotations);
+            setComplete(true);
     
         } catch (error) {
             console.log("error annotating the clusters:" , error);
@@ -246,7 +262,13 @@ const Annotations = ({data: session, token, resolution}) => {
                 <div className='flex items-center mt-4 space-x-10 '>
                     <button className=" p-2 bg-cyan text-black rounded hover:bg-green-600" onClick={handleSaveAnnotations}>Save</button>
                     <div className={`w-1/2 text-white`}>
-                        <NextButton path={`/AnalysisOptions`} complete={true}/>
+                        <div className='flex items-center justify-center w-full h-full'> 
+                            <button 
+                            className={`${complete ? 'bg-blue hover:scale-110 hover:transition-y-1 delay-50 transition ease-in-out' : 'bg-blue/50 cursor-not-allowed'} border border-blue py-2 px-4 rounded-lg w-full h-full`} 
+                            onClick={finishPA()}>
+                                Finish
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
