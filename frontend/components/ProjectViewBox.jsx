@@ -484,7 +484,6 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
     ) : (
         <button 
             className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' 
-            onClick={handleRunAnalysis}
             disabled={!qcCompleted()}
         >
             Run Analysis
