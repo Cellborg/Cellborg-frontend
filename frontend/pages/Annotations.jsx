@@ -18,6 +18,7 @@ import { socketio } from '../constants';
 import io from 'socket.io-client';
 import { useRouter } from 'next/router';
 import {handleFinishPA} from '../components/utils/qcClient.mjs';
+import { get, set } from 'idb-keyval'
 
 const ClusteringPlot = dynamic(() => import('../components/plots/ScatterPlot'), {ssr: false});
 const ViolinPlot = dynamic(() => import('../components/plots/VlnPlots'), {ssr: false});
