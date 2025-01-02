@@ -265,7 +265,7 @@ const Annotations = ({data: session, token, resolution}) => {
                         <div className='flex items-center justify-center w-full h-full'> 
                             <button 
                             className={`${complete ? 'bg-blue hover:scale-110 hover:transition-y-1 delay-50 transition ease-in-out' : 'bg-blue/50 cursor-not-allowed'} border border-blue py-2 px-4 rounded-lg w-full h-full`} 
-                            onClick={finishPA()}>
+                            onClick={finishPA}>
                                 Finish
                             </button>
                         </div>
