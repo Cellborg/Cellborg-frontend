@@ -110,10 +110,10 @@ const Annotations = ({data: session, token, resolution}) => {
                 //update mongo
                 
                 const response = await updateProject(projectList[projIdx]._id, projectList[projIdx],token)
-                console.log(`dataset ${dataset} marked ${stage}`)
+                console.log(`project marked done for pa`)
             }
             else {
-                console.log(`no need to update, dataset ${dataset} already ${stage}`)
+                console.log(`no need to update, project already finished PA`)
             }
 
             router.push('/dashboard');
