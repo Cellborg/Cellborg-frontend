@@ -471,17 +471,28 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         )}
 
                      <div className="bottom-0 flex justify-start mt-5">
-                        <button className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' onClick={handleEdit}>Edit</button>
-                        
-                        <button 
-                            className={`border px-2 py-1 m-2 rounded-md ${qcCompleted() ? 'hover:bg-cyan' : 'bg-gray-400 cursor-not-allowed'}`} 
-                            onClick={handlePARun} 
-                            disabled={!qcCompleted()}
-                        >
-                            Run Processing and Annotations
-                        </button>
-                        <button className='border px-2 py-1 m-2 bg-red-400 rounded-md hover:bg-red-400/50' onClick={saveDeleted}>Delete Project</button>
-                    </div>
+    <button className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' onClick={handleEdit}>Edit</button>
+    
+    {selectedProject.status !== 'PAComplete' ? (
+        <button 
+            className={`border px-2 py-1 m-2 rounded-md ${qcCompleted() ? 'hover:bg-cyan' : 'bg-gray-400 cursor-not-allowed'}`} 
+            onClick={handlePARun} 
+            disabled={!qcCompleted()}
+        >
+            Run Processing and Annotations
+        </button>
+    ) : (
+        <button 
+            className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' 
+            onClick={handleRunAnalysis}
+            disabled={!qcCompleted()}
+        >
+            Run Analysis
+        </button>
+    )}
+    
+    <button className='border px-2 py-1 m-2 bg-red-400 rounded-md hover:bg-red-400/50' onClick={saveDeleted}>Delete Project</button>
+</div>
 
                     <div className='mt-5 font-bold text-blue'> Runs:</div>
                         {selectedProject.runs && selectedProject.runs.length > 0 ? (

@@ -48,7 +48,7 @@ const Annotations = ({data: session, token, resolution}) => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [annotationsLoaded, setAnnotationsLoaded] = useState(true);
-    const {selectedProject, analysisId, clusters, setClusters, geneList, setGeneList} = useProjectContext();
+    const {selectedProject, setSelectedProject, clusters, setClusters, geneList, setGeneList} = useProjectContext();
     const [geneNames, setGeneNames] = useState(null);
     const [ready, setReady] = useState(false);
     const [annotations, setAnnotations] = useState(clusters);
@@ -93,6 +93,29 @@ const Annotations = ({data: session, token, resolution}) => {
         try{
             const response = handleFinishPA(selectedProject.user, selectedProject.project_id, router, token);
             console.log('Finished PA:', response);
+
+            const projectList = await get('cachedProjects');
+            console.log("project list:", projectList)
+            const projIdx = projectList.findIndex(p => p.project_id == selectedProject.project_id);
+            //console.log(projIdx)
+            //const dataIdx = projectList[projIdx].datasets.findIndex(d => d.dataset_id === dataset);
+    
+            if (projectList[projIdx].status !== 'PAcomplete') {
+                projectList[projIdx].status ='PAcomplete';
+                setProjects(projectList);
+                setSelectedProject(projectList[projIdx]);
+                //set cache status
+                set('cachedProjects', projectList)
+    
+                //update mongo
+                
+                const response = await updateProject(projectList[projIdx]._id, projectList[projIdx],token)
+                console.log(`dataset ${dataset} marked ${stage}`)
+            }
+            else {
+                console.log(`no need to update, dataset ${dataset} already ${stage}`)
+            }
+
             router.push('/dashboard');
         }catch(err){
             console.error('Error finishing PA:', err);
