@@ -1,8 +1,6 @@
-import React,{ useEffect, useState, useRef} from 'react';
-import HighchartsReact from "highcharts-react-official";
-import Highcharts from 'highcharts';
-import ViolinPlot from './../components/plots/ViolinPlot';
-
+import React,{ useEffect, useState} from 'react';
+import dynamic from 'next/dynamic';
+const ViolinPlot = dynamic(()=> import('./../components/plots/ViolinPlot'), {ssr: false});
 const Test=()=>{
 const [data, setData] = useState(null);
 useEffect(() => {
@@ -24,6 +22,10 @@ useEffect(() => {
 }, []);
 
 return(
-    <ViolinPlot plotData = {data}/>
+    <div className="flex items-center">
+        <ViolinPlot plotData = {data} datamap={'pct_counts_mt'}/>
+        <ViolinPlot plotData = {data} datamap={'total_counts'}/>
+        <ViolinPlot plotData = {data} datamap={'n_genes'}/>
+    </div>
 )};
 export default Test;
