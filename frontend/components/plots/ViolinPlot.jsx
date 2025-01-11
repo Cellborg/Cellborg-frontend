@@ -3,29 +3,28 @@ import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 
-const ViolinPlot = ({ plotData, datamap}) => {
+const ViolinPlot = ({ vio_data, datamap, div_id}) => {
 
   useEffect(() => {
-    if (!plotData) return;
+    if (!vio_data) return;
 
-    let data_to_get;
-    let steps;
-    const root = am5.Root.new(datamap);
-    if(datamap === 'pct_counts_mt'){
+    //let data_to_get;
+    const root = am5.Root.new(div_id);
+    /*if(datamap === 'pct_counts_mt'){
       // Extract pct_counts_mt values
       data_to_get = Object.values(plotData).map(d => d.pct_counts_mt).sort((a, b) => a - b);
     } else if(datamap === 'total_counts'){
       data_to_get = Object.values(plotData).map(d => d.total_counts).sort((a, b) => a - b);
     } else if(datamap === 'n_genes'){
       data_to_get = Object.values(plotData).map(d => d.n_genes).sort((a, b) => a - b);
-    }
-
+    }*/
+    console.log('Data to get:', vio_data);
     // Calculate step size
-    const minValue = Math.min(...data_to_get);
-    const maxValue = Math.max(...data_to_get);
-    const numberOfBins = Math.sqrt(data_to_get.length);
+    const minValue = Math.min(...vio_data);
+    const maxValue = Math.max(...vio_data);
+    const numberOfBins = Math.sqrt(vio_data.length);
     const stepSize = (maxValue - minValue) / numberOfBins;
-    steps=Math.floor(stepSize);
+    const steps=Math.floor(stepSize);
     console.log('Step Size:', stepSize, datamap)
 
     // Set themes
@@ -36,7 +35,7 @@ const ViolinPlot = ({ plotData, datamap}) => {
     
     // Source data
     let sourceData = {
-      data_to_get: data_to_get,
+      data_to_get: vio_data,
       
     };
     
@@ -79,6 +78,7 @@ const ViolinPlot = ({ plotData, datamap}) => {
     // Set categories
     let combinedValues = [];
     Object.keys(sourceData).map(function(category) {
+      console.log(category)
       combinedValues = combinedValues.concat(sourceData[category]);
     });
     yAxis.data.setAll(calculateData(combinedValues, steps));
@@ -186,12 +186,12 @@ const ViolinPlot = ({ plotData, datamap}) => {
   return () => {
     root.dispose();
   };
-  }, [plotData]);
+  }, [vio_data, div_id]);
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">
       <div className="h-full w-2/3 justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white overflow-auto">
-        <div id={datamap} style={{ width: "100%", height: "500px" }}></div>
+        <div id={div_id} style={{ width: "100%", height: "500px" }}></div>
       </div>
     </div>
   );

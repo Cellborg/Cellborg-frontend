@@ -1,69 +1,56 @@
-import Plot from 'react-plotly.js';
-import { getPlotData } from '../utils/s3client.mjs';
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+const ViolinPlot = dynamic(()=> import('./ViolinPlot'), {ssr: false});
+const VlnRow = dynamic(()=> import('./VlnRow'), {ssr: false});
+const VlnPlots = ({ plotData }) => {
+  const [genesExp, setGeneExp] = useState({});
 
-const VlnPlots = ({plotKey, bucket, clusters}) => {
-    const [data, setData] = useState(null);
-
-    useEffect(() => {
-        console.log('Key:', plotKey);
-        console.log('Bucket:', bucket);
-        const fetchPlotData = async () => {
-          try {
-            const data = await getPlotData(bucket, plotKey);
-            setData(data);
-          } catch (err) {
-            console.log(`Error fetching plot data: ${err}`);
-          }
-        };
-        if (plotKey && bucket) {
-          fetchPlotData();
-        }
-      }, [plotKey, bucket]);
-
-    if(data) {
-        const geneNames = Object.keys(data[0]).filter(key => key !== 'barcode' && key !== 'cluster_id' && key !== '_row');
-        const uniqueClusterIds = [...new Set(data.map(item => item.cluster_id))].sort();
-        return (
-            <div style={{width: '100%', height: '100%', overflow: 'scroll' }}>
-                {geneNames.map(gene => (
-                    <Plot
-                        className='w-full h-full'
-                        key={gene}
-                        data={[
-                        {
-                            type: 'violin',
-                            y: data.map(item => item[gene]),
-                            x: data.map(item => clusters[item.cluster_id] || item.cluster_id), // Use cluster names
-                            box: { visible: true },
-                            line: { color: 'green' },
-                            name: gene,
-                            points: 'all',
-                            pointpos: 0,
-                            jitter: 0.4,
-                            scalemode: 'count',
-                            width: 2,
-                            marker: {size: 4}
-                        }
-                        ]}
-                        layout={{
-                          title: `Expression levels of ${gene}`,
-                          xaxis: {
-                              showgrid: false,
-                              title: "Identity",
-                              type: 'category',
-                              categoryarray: uniqueClusterIds.map(id => clusters[id] || id)
-                          },
-                          yaxis: {showgrid: false, title: "Expression Level", range: [0, 'auto'], zeroline: false}
-                      }}
-                      
-                    />
-                ))}
-            </div>
-        )
-    } else {
-        return (<div>Setting Plot Data</div>)
+  useEffect(() => {
+    if (typeof plotData !== 'object' || plotData === null) {
+      console.error('plotData is not an object:', plotData);
+      return;
     }
-}
+
+    let geneExp = {};
+    // Process plotData to clusters by gene
+    Object.entries(plotData).forEach(([key, value]) => {
+      let cluster = value.cluster;
+      Object.keys(value).forEach((gene) => {
+      if (gene !== 'UMAP1' && gene !== 'UMAP2' && gene !== 'cluster') {
+        if (!geneExp[gene]) {
+        geneExp[gene] = {};
+        }
+        if(!geneExp[gene][cluster]) {
+          geneExp[gene][cluster] = [];
+        }
+        geneExp[gene][cluster].push(value[gene]);
+      }
+
+      });
+    });
+
+    console.log('GENE HERE', geneExp);
+
+    /**
+     * geneExp is not a dict of genes with
+     * clusters as keys and expression of gene is that clusters as a list
+     */
+    setGeneExp(geneExp);
+
+
+  }, [plotData]);
+
+  return (
+    <div style={{ width: '100%', height: '100%', overflow: 'scroll' }}>
+      <div className='grid grid-cols-1'>
+        {Object.entries(genesExp).map(([geneName, geneDict]) =>
+          <div key={`${geneName}`}>
+            <VlnRow row_data={geneDict} datamap={`${geneName}`} div_id={`${geneName}`}/>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default VlnPlots;
