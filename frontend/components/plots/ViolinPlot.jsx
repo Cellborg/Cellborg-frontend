@@ -3,21 +3,22 @@ import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 
-const ViolinPlot = ({ vio_data, datamap, div_id}) => {
+const ViolinPlot = ({ plotData, datamap, div_id}) => {
 
   useEffect(() => {
-    if (!vio_data) return;
+    if (!plotData) return;
 
     //let data_to_get;
+    let vio_data;
     const root = am5.Root.new(div_id);
-    /*if(datamap === 'pct_counts_mt'){
+    if(datamap === 'pct_counts_mt'){
       // Extract pct_counts_mt values
-      data_to_get = Object.values(plotData).map(d => d.pct_counts_mt).sort((a, b) => a - b);
+      vio_data = Object.values(plotData).map(d => d.pct_counts_mt).sort((a, b) => a - b);
     } else if(datamap === 'total_counts'){
-      data_to_get = Object.values(plotData).map(d => d.total_counts).sort((a, b) => a - b);
+      vio_data = Object.values(plotData).map(d => d.total_counts).sort((a, b) => a - b);
     } else if(datamap === 'n_genes'){
-      data_to_get = Object.values(plotData).map(d => d.n_genes).sort((a, b) => a - b);
-    }*/
+      vio_data = Object.values(plotData).map(d => d.n_genes).sort((a, b) => a - b);
+    }
     console.log('Data to get:', vio_data);
     // Calculate step size
     const minValue = Math.min(...vio_data);
@@ -186,7 +187,7 @@ const ViolinPlot = ({ vio_data, datamap, div_id}) => {
   return () => {
     root.dispose();
   };
-  }, [vio_data, div_id]);
+  }, [plotData, div_id]);
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">

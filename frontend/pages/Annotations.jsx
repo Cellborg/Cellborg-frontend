@@ -89,7 +89,7 @@ const Annotations = ({data: session, token, resolution}) => {
     const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${resolution}.json`
     const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
     const featurePlotkey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
-    const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/vlnplots.json`
+    const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
 
     const finishPA = async () => {
         try{
@@ -313,7 +313,7 @@ const Annotations = ({data: session, token, resolution}) => {
                                 /> :
                             activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} /> :
                             loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot bucket={datasetqcBucket} plotKey={featurePlotkey} gene={genes[0]}/> :
-                            loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={VLN_PLOTS_BUCKET} clusters={clusters} /> :
+                            loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={datasetqcBucket} genes={genes} /> :
                             loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={datasetqcBucket}/> : null : null
                         }
                     </motion.div>

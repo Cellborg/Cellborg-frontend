@@ -6,9 +6,6 @@ const Test=()=>{
 const [viodata, setVioData] = useState(null);
 const [vlndata, setVlnData] = useState(null);
 
-const [pct_count, setPctCount] = useState(null);
-const[ngenes, setNGenes] = useState(null);
-const [total_counts, setTotalCounts] = useState(null);
 useEffect(() => {
     // Fetch JSON data from the public folder
     fetch('/input.json')
@@ -20,9 +17,6 @@ useEffect(() => {
         })
         .then((data) => {
             setVioData(data); // Save the data in state
-            setPctCount(Object.values(data).map(d => d.pct_counts_mt).sort((a, b) => a - b));
-            setNGenes(Object.values(data).map(d => d.n_genes).sort((a, b) => a - b));
-            setTotalCounts(Object.values(data).map(d => d.total_counts).sort((a, b) => a - b));
              // Log it for debugging
         })
         .catch((error) => {
@@ -44,9 +38,9 @@ useEffect(() => {
 return(
     <div>
         <div className="flex items-center">
-            <ViolinPlot vio_data = {pct_count} datamap={'pct_counts_mt'} div_id={'pct_counts_mt'}/>
-            <ViolinPlot vio_data = {total_counts} datamap={'total_counts'} div_id={'total_counts'}/>
-            <ViolinPlot vio_data = {ngenes} datamap={'n_genes'} div_id={'n_genes'}/>
+            <ViolinPlot plotData = {viodata} datamap={'pct_counts_mt'} div_id={'pct_counts_mt'}/>
+            <ViolinPlot plotData = {viodata} datamap={'total_counts'} div_id={'total_counts'}/>
+            <ViolinPlot plotData = {viodata} datamap={'n_genes'} div_id={'n_genes'}/>
         </div>
         <div>
             <VlnPlots plotData={vlndata} />

@@ -1,9 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { getPlotData } from '../utils/s3client.mjs';
+
 const ViolinPlot = dynamic(()=> import('./ViolinPlot'), {ssr: false});
 const VlnRow = dynamic(()=> import('./VlnRow'), {ssr: false});
-const VlnPlots = ({ plotData }) => {
+const VlnPlots = ({ plotKey, bucket, genes }) => {
   const [genesExp, setGeneExp] = useState({});
+  const [plotData, setPlotData] = useState(null);
+
+  useEffect(() => {
+    console.log('Key:', plotKey);
+    console.log('Bucket:', bucket);
+    const fetchPlotData = async () => {
+      try {
+        const data = await getPlotData(bucket, plotKey);
+        setPlotData(data);
+      } catch (err) {
+        setError(`Error fetching plot data: ${err}`);
+      }
+    };
+    if (plotKey && bucket) {
+      fetchPlotData();
+    }
+  }, [bucket, plotKey, genes]);//want it to change whenever the gene passed in changes since bucket and key won't
 
   useEffect(() => {
     if (typeof plotData !== 'object' || plotData === null) {
