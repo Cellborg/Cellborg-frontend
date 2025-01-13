@@ -191,7 +191,7 @@ const ViolinPlot = ({ plotData, datamap, div_id}) => {
 
   return (
     <div className="flex bg-slate-100 justify-center w-full h-full">
-      <div className="h-full w-2/3 justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white overflow-auto">
+      <div className="h-full w-full justify-center items-center border-4 rounded-sm p-4 mx-2 bg-white overflow-auto">
         <div id={div_id} style={{ width: "100%", height: "500px" }}></div>
       </div>
     </div>
