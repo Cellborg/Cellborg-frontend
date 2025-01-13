@@ -1,6 +1,6 @@
 import React,{ useEffect, useState} from 'react';
 import dynamic from 'next/dynamic';
-import PlotCarousel from '../components/PlotCarousel';
+
 const ViolinPlot = dynamic(()=> import('./../components/plots/ViolinPlot'), {ssr: false});
 const VlnPlots = dynamic(()=> import('./../components/plots/VlnPlots'), {ssr: false});
 const Test=()=>{
@@ -34,14 +34,19 @@ useEffect(() => {
             setVlnData(data);
             console.log('VLN Data', data)
         })
-    setPlots([
-        <div key={0} className='flex'>
-            <ViolinPlot plotData={viodata} datamap={'pct_counts_mt'} div_id={'pct_counts_mt'} className='w-auto'/>
-            <ViolinPlot plotData={viodata} datamap={'total_counts'} div_id={'total_counts'} className='w-auto'/>
-            <ViolinPlot plotData={viodata} datamap={'n_genes'} div_id={'n_genes'} className='w-auto'/>
-        </div>
-        ]);
+        
 }, []);
+/**
+ * Since this is a testing environment you cant select which genes you want because we are reading a static 
+ * json file (means you cant change it since we would have to query a new adata obj to 
+ * generate a new one). I just used the one we went over on call so it
+ * is going to be those 4 genes
+ */
+const plotKey = '_cdanK3oQfctEqYKKYTQ_/4gYjQnv7kWhusWiPjMBol/gene_expression.json'
+const datasetqcBucket = 'cellborg-beta-qcdataset-bucket'
+
+//hence why this is empty and has no bearing on the chart
+const genes=[];
 
 return(
     <div>
@@ -51,7 +56,7 @@ return(
             <ViolinPlot plotData={viodata} datamap={'n_genes'} div_id={'n_genes'} className='w-auto'/>
         </div>
         <div>
-            <VlnPlots plotData={vlndata} />
+            <VlnPlots plotKey={plotKey} bucket={datasetqcBucket} genes={genes} />
         </div>
     </div>
 

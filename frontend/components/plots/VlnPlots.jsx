@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { getPlotData } from '../utils/s3client.mjs';
 
-const ViolinPlot = dynamic(()=> import('./ViolinPlot'), {ssr: false});
 const VlnRow = dynamic(()=> import('./VlnRow'), {ssr: false});
 const VlnPlots = ({ plotKey, bucket, genes }) => {
   const [genesExp, setGeneExp] = useState({});
