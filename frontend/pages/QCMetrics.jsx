@@ -106,12 +106,12 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
 
 
   const plots = jsonData? [
-    <div ket={0} className='flex items-center'>
-      <DynamicViolinPlot key ={1} plotData={jsonData} datamap={'pct_counts_mt'} className='w-auto'/>
-      <DynamicViolinPlot key ={2} plotData={jsonData} datamap={'total_counts'} className='w-auto'/>
-      <DynamicViolinPlot key ={3} plotData={jsonData} datamap={'n_genes'} className='w-auto'/>
+    <div key={0} className='flex items-center'>
+      <DynamicViolinPlot plotData={jsonData} datamap={'pct_counts_mt'} className='w-auto'/>
+      <DynamicViolinPlot plotData={jsonData} datamap={'total_counts'} className='w-auto'/>
+      <DynamicViolinPlot plotData={jsonData} datamap={'n_genes'} className='w-auto'/>
     </div>,
-    <DynamicFeatureScatterPlot key={4} plotData={jsonData} className='w-auto'/>, //highlight points below n above the cutoff
+    <DynamicFeatureScatterPlot key={1} plotData={jsonData} className='w-auto'/>, //highlight points below n above the cutoff
   ]:[];
 
   return (
