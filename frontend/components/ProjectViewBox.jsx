@@ -323,6 +323,9 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 
                 for (const dataset of selectedDatasets) {//find species for all new datasets
                     for (const file of Array.from(dataset)) {
+                        console.log('CHECKING SPECIES HERE')
+                        console.log(file.name);
+                        console.log(file.name.endsWith('features.tsv.gz'))
                         if(file.name.endsWith('features.tsv.gz')){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
                             const spec = await findSpecies(file)
