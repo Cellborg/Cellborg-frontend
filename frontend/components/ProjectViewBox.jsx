@@ -363,7 +363,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 //newProject.datasets an array of objects - find the correct dataset
                 for (const dataset of selectedDatasets) {
                     for (const file of Array.from(dataset)) {
-                        if(file.name=="features.tsv.gz"){
+                        if(file.name.endsWith('features.tsv.gz')){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
                             const spec = await findSpecies(file)
                             if(spec){
