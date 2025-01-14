@@ -156,7 +156,17 @@ async function loadCPlot(data, token) {
     
     return await mongoRequest('pa/clustering', data, token);
 };
-
+async function conductGeneExpression(data, token){
+    return await mongoRequest('pa/geneexpression', data, token)
+}
+async function annotateClusters(user, project, annotations, token) {
+    const data = {
+        user: user,
+        project: project,
+        annotations: annotations
+    };
+    return await mongoRequest('pa/annotations', data, token);
+};
 
 /*ANALYSIS REQUESTS */
 async function begin(prefix) {
@@ -215,16 +225,6 @@ async function loadVlnPlots(user, project, analysis, genes, token) {
     return await mongoRequest('analysis/loadVlnPlots', data, token);
 };
 
-async function annotateClusters(user, project, analysis, annotations, token) {
-    const data = {
-        user: user,
-        project: project,
-        analysisId: analysis,
-        annotations: JSON.stringify(annotations)
-    };
-    return await mongoRequest('analysis/annotateClusters', data, token);
-};
-
 async function psuedotimeAnalysis(user, project, analysis, points, token) {
     const data = {
         user: user,
@@ -280,7 +280,7 @@ async function collectGenenames(geneNameRequest) {
 
 
 export { getProjects, getProject, deleteProject, updateProject, createProject, getMetadata, signUp, getUser, deleteUser,
-loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets,prepPA,beginPA, begin, varfeatureanalysis, loadGeneFeaturePlot,
+loadQCPlot, beginQualityControl, performQCMetricsPrePlot,performQCDoublets,finishDoublets,prepPA,beginPA,conductGeneExpression, begin, varfeatureanalysis, loadGeneFeaturePlot,
 newAnalysisId, beginAnalysis, loadCPlot, collectGenenames, heatmapanalysis, psuedotimeAnalysis, loadDotPlot, loadVlnPlots, 
 annotateClusters, findAllMarkersAnalysis, findMarkersAnalysis,sendAccountRequest,sendReportBug,newDatasetId }
 

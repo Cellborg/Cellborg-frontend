@@ -26,7 +26,8 @@ async function getPlotData(bucket, key) {
   var check=false;
   while(!check){
     check= await checkIfPlotDataExists(bucket,key)
-    console.log(check)
+    console.log(key, bucket)
+    console.log(check, 'get plot data')
   }
   try {
       const command = new GetObjectCommand({Bucket: bucket, Key: key });

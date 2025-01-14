@@ -4,16 +4,22 @@ import { motion } from 'framer-motion';
 import { getSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import {MutatingDots} from 'react-loader-spinner';
-import { loadDotPlot, loadVlnPlots, annotateClusters, loadGeneFeaturePlot } from '../components/utils/mongoClient.mjs'
+import { loadDotPlot, loadVlnPlots, annotateClusters, loadGeneFeaturePlot, conductGeneExpression } from '../components/utils/mongoClient.mjs'
 import { getPlotData } from '../components/utils/s3client.mjs';
 import { useProjectContext } from '../components/utils/projectContext';
-import { datasetclusterBucket, DOTPLOT_BUCKET, VLN_PLOTS_BUCKET, genefeatBucket, projectGeneNameBucket } from '../constants';
+import { datasetclusterBucket, DOTPLOT_BUCKET, VLN_PLOTS_BUCKET, genefeatBucket, projectGeneNameBucket, datasetqcBucket } from '../constants';
 import SocketComponent from '../components/SocketComponent';
 import { NextButton } from '../components/NextButton';
 import { getToken } from '../components/utils/security.mjs';
 import PagesNavbar from '../components/PagesNavbar';
 import { GoReport } from "react-icons/go";
 import BugReportForm from '../components/BugReportForm';
+import { socketio } from '../constants';
+import io from 'socket.io-client';
+import { useRouter } from 'next/router';
+import {handleFinishPA} from '../components/utils/qcClient.mjs';
+import { get, set } from 'idb-keyval'
+import {updateProject} from '../components/utils/mongoClient.mjs';
 
 const ClusteringPlot = dynamic(() => import('../components/plots/ScatterPlot'), {ssr: false});
 const ViolinPlot = dynamic(() => import('../components/plots/VlnPlots'), {ssr: false});
@@ -44,13 +50,18 @@ const Annotations = ({data: session, token, resolution}) => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [annotationsLoaded, setAnnotationsLoaded] = useState(true);
-    const {selectedProject, analysisId, clusters, setClusters} = useProjectContext();
+    const {selectedProject, setSelectedProject, setProjects, clusters, setClusters, geneList} = useProjectContext();
     const [geneNames, setGeneNames] = useState(null);
     const [ready, setReady] = useState(false);
     const [annotations, setAnnotations] = useState(clusters);
     const [showForm,setShowForm]=useState(false);
+    const [complete, setComplete] = useState(false);
+    const router = useRouter();
 
-    useEffect(() => {
+    /**
+     * Already pull gene names on adata init during loading
+     */
+    /*useEffect(() => {
         const geneNamesKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/geneNames.json`
         getPlotData(projectGeneNameBucket, geneNamesKey)
         .then((data) => {
@@ -59,12 +70,59 @@ const Annotations = ({data: session, token, resolution}) => {
         .catch((error) => {
             console.error('Error setting the gene names:', error);
         });
-      }, [selectedProject, analysisId]);
+      }, [selectedProject, analysisId]);*/
 
-    const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/n=${n}&c=${c}&d=${d}&r=${r}.json`
-    const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/dotplot.json`
-    const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/${analysisId}/vlnplots.json`
+    /**
+     * Listen for gene expression finishing so frontend can pull data from s3
+     */
+    useEffect(()=>{
+    const socket = io(socketio);
+    socket.emit('RegisterConnection', selectedProject.user);
 
+    socket.on('PA_Gene_Expression_Complete', async (data)=>{
+        const {user, project, stage} = data;
+        console.log('gene expression has finished and sns reached frontend');
+        setReady(true);
+    })
+    }, [])
+
+    const clusterPlotKey = `${selectedProject.user}/${selectedProject.project_id}/UMAP_CLUSTERING&res=${resolution}.json`
+    const dotPlotKey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
+    const featurePlotkey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
+    const vlnPlotsKey = `${selectedProject.user}/${selectedProject.project_id}/gene_expression.json`
+
+    const finishPA = async () => {
+        try{
+            const response = await handleFinishPA(selectedProject.user, selectedProject.project_id, router, token);
+            console.log('Finished PA:', response);
+
+            const projectList = await get('cachedProjects');
+            console.log("project list:", projectList)
+            const projIdx = projectList.findIndex(p => p.project_id == selectedProject.project_id);
+    
+            if (projectList[projIdx].status !== 'PAcomplete') {
+                projectList[projIdx].status ='PAcomplete';
+                setProjects(projectList);
+                setSelectedProject(projectList[projIdx]);
+                //set cache status
+                set('cachedProjects', projectList)
+    
+                //update mongo
+                
+                const response = await updateProject(projectList[projIdx]._id, projectList[projIdx],token)
+                console.log(`project marked done for pa`)
+            }
+            else {
+                console.log(`no need to update, project already finished PA`)
+            }
+
+            router.push('/dashboard');
+        }catch(err){
+            console.error('Error finishing PA:', err);
+            router.push('/dashboard');
+        }
+
+    };
     const handleSaveAnnotations = async() => {
         console.log("Annotations: ", annotations);
 
@@ -80,11 +138,11 @@ const Annotations = ({data: session, token, resolution}) => {
             const res = await annotateClusters(
                 selectedProject.user, 
                 selectedProject.project_id, 
-                analysisId, 
                 correctedAnnotations, 
                 token
             );
             setClusters(correctedAnnotations);
+            setComplete(true);
     
         } catch (error) {
             console.log("error annotating the clusters:" , error);
@@ -118,21 +176,31 @@ const Annotations = ({data: session, token, resolution}) => {
     const handleItemRemove = (itemToRemove) => {
         setGenes(prevGenes => prevGenes.filter(item => item !== itemToRemove));
     };
-
     const handleLoadPlot = async() => {
         console.log('Loading', selectedPlotType, 'for:', genes);
         setLoadedPlot(selectedPlotType);
         //setIsLoading(true);
         setActiveTab('other'); 
         setReady(false);
-        if (selectedPlotType === "Feature Plot" && genes.length === 1) {
+
+        //make request to gene expression here or below
+        const data={
+            user: selectedProject.user, 
+            project: selectedProject.project_id,
+            gene_list: genes
+        }
+        console.log("about to make request to gene expression");
+        const response = await conductGeneExpression(data, token);
+        console.log('Made request here is the response', response);
+
+
+        /*if (selectedPlotType === "Feature Plot" && genes.length === 1) {
             setGeneFeature(genes[0]);
             console.log("Getting feature plot data", genes[0]);
             const data = {
                 gene_name: genes[0],
                 user: selectedProject.user,
                 project: selectedProject.project_id,
-                analysisId: analysisId
             }
             try {
                 await loadGeneFeaturePlot(data, token);          
@@ -141,19 +209,19 @@ const Annotations = ({data: session, token, resolution}) => {
             }
         } else if (selectedPlotType === "Dot Plot") {
             try {
-                await loadDotPlot(selectedProject.user, selectedProject.project_id, analysisId, genes, token);          
+                await loadDotPlot(selectedProject.user, selectedProject.project_id, genes, token);          
             } catch (error) {
                 console.error('Error processing the dot plot:', error);
             }
         } else if (selectedPlotType === "Violin Plot") {
             try {
-                await loadVlnPlots(selectedProject.user, selectedProject.project_id, analysisId, genes, token);          
+                await loadVlnPlots(selectedProject.user, selectedProject.project_id, genes, token);          
             } catch (error) {
                 console.error('Error processing the violin plots:', error);
             }
         } else {
             console.log("Unknown plot type chosen: ", selectedPlotType);
-        }
+        }*/
     };
 
     return (
@@ -168,7 +236,7 @@ const Annotations = ({data: session, token, resolution}) => {
             <GoReport />
         </div>
         <PagesNavbar page={"ANNOTATIONS"}/>
-        <SocketComponent user={selectedProject.user} setComplete={setReady} step={selectedPlotType ? selectedPlotType.replace(' ', '') : ''} />
+        {/* <SocketComponent user={selectedProject.user} setComplete={setReady} step={selectedPlotType ? selectedPlotType.replace(' ', '') : ''} /> */}
         <div className='flex flex-row justify-center mt-10'>
             <div className='w-1/3 ml-3 p-3'>
                 <div className="flex flex-wrap p-2 mb-5 border border-gray-300 h-16 overflow-auto">
@@ -184,7 +252,7 @@ const Annotations = ({data: session, token, resolution}) => {
                         </div>
                     ))}
                 </div>
-                <GeneNamesList items={geneNames} handleItemSelect={handleItemSelect} className='w-full'/>
+                <GeneNamesList items={geneList} handleItemSelect={handleItemSelect} className='w-full'/>
                 <div className="flex mt-10 mb-10 p-3 ml-3 space-x-4 z-0">
                     <label className="flex items-center cursor-pointer" title={genes.length !== 1 ? 'Select one gene for a Feature Plot' : ''}>
                         <input type="radio" name="plotType" value="Feature Plot" disabled={genes.length === 0 || genes.length > 1} className="form-radio text-blue-500" onChange={() => setSelectedPlotType('Feature Plot')}/>
@@ -217,7 +285,13 @@ const Annotations = ({data: session, token, resolution}) => {
                 <div className='flex items-center mt-4 space-x-10 '>
                     <button className=" p-2 bg-cyan text-black rounded hover:bg-green-600" onClick={handleSaveAnnotations}>Save</button>
                     <div className={`w-1/2 text-white`}>
-                        <NextButton path={`/AnalysisOptions`} complete={true}/>
+                        <div className='flex items-center justify-center w-full h-full'> 
+                            <button 
+                            className={`${complete ? 'bg-blue hover:scale-110 hover:transition-y-1 delay-50 transition ease-in-out' : 'bg-blue/50 cursor-not-allowed'} border border-blue py-2 px-4 rounded-lg w-full h-full`} 
+                            onClick={finishPA}>
+                                Finish
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -237,10 +311,10 @@ const Annotations = ({data: session, token, resolution}) => {
                                     wrapperClass="h-full flex items-center justify-center"
                                     visible={true}
                                 /> :
-                            activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetclusterBucket} /> :
-                            loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot user={selectedProject.user} project={selectedProject.project_id} analysis={analysisId} bucket={genefeatBucket} gene={geneFeature}/> :
-                            loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={VLN_PLOTS_BUCKET} clusters={clusters} /> :
-                            loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={DOTPLOT_BUCKET} clusters={clusters} /> : null : null
+                            activeTab === "cluster" ? <ClusteringPlot plotKey={clusterPlotKey} bucket={datasetqcBucket} /> :
+                            loadedPlot && activeTab === "other" ? loadedPlot === "Feature Plot" && ready ? <FeaturePlot bucket={datasetqcBucket} plotKey={featurePlotkey} gene={genes[0]}/> :
+                            loadedPlot === "Violin Plot" && ready ? <ViolinPlot plotKey={vlnPlotsKey} bucket={datasetqcBucket} genes={genes} /> :
+                            loadedPlot === "Dot Plot" && ready ? <DotPlot plotKey={dotPlotKey} bucket={datasetqcBucket}/> : null : null
                         }
                     </motion.div>
                     <motion.div
@@ -276,7 +350,7 @@ const Annotations = ({data: session, token, resolution}) => {
 export async function getServerSideProps(context) {
     // Get the user's JWT access token from next's server-side cookie
     const token = await getToken(context);
-    const resolution = context.query;
+    const resolution = parseInt(context.query.res, 10);//parse as radix
     console.log(resolution);
     if (!token) {
       return {

@@ -1,87 +1,165 @@
 import { useState, useEffect } from "react";
-import Plot from "react-plotly.js";
 import { getPlotData } from "../utils/s3client.mjs";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
+import HighchartsMore from 'highcharts/highcharts-more';
+import HighchartsColorAxis from 'highcharts/modules/coloraxis';
+HighchartsMore(Highcharts);
+HighchartsColorAxis(Highcharts);
 
-const DotPlot = ({ plotKey, bucket, clusters }) => {
-    const [data, setData] = useState(null);
-    useEffect(() => {
-        console.log('Key:', plotKey);
-        console.log('Bucket:', bucket);
-        const fetchPlotData = async () => {
-          try {
-            const data = await getPlotData(bucket, plotKey);
-            setData(data);
-          } catch (err) {
-            console.log(`Error fetching plot data: ${err}`);
-          }
-        };
-        if (plotKey && bucket) {
-          fetchPlotData();
-        }
-      }, [plotKey, bucket]);
+const DotPlot = ({ plotKey, bucket }) => {
+  const [data, setData] = useState(null);
+  const [chartOptions, setChartOptions] = useState(null);
 
-    let trace;
-    let sizeLegendTraces;
-    let layout;
-    if (data) {
+  /**
+   * Get gene expression data from s3
+   */
+  useEffect(() => {
+    console.log("Key:", plotKey);
+    console.log("Bucket:", bucket);
 
-        const maxPctExp = Math.max(...data.map(row => row['pct.exp']));
-        const scalingFactor = 20 / maxPctExp;
-    
-        trace = {
-            x: data.map(row => row['features.plot']),
-            y: data.map(row => clusters[row['id']] || row['id']),
-            mode: 'markers',
-            marker: {
-                color: data.map(row => row['avg.exp.scaled']),
-                size: data.map(row => row['pct.exp'] * scalingFactor),
-                colorscale: [[0, 'rgba(210, 210, 210, 0.75)'], [1, 'green']],
-                showscale: true,
-                sizemode: 'diameter',
-                colorbar: {
-                    len: 0.5,
-                    y: 0.2
-                }
-            },
-            type: 'scatter',
-            text: data.map(row => `Average Expression: ${row['avg.exp']}, Percent Expressed: ${row['pct.exp']}`),
-            hoverinfo: 'text+x+y',
-            showlegend: false
-        };
-    
-        sizeLegendTraces = [0, 25, 50, 75, 100].map(pct => ({
-            x: [null],
-            y: [null],
-            marker: { size: pct * scalingFactor, color: 'green' },
-            name: `${pct}%`,
-            mode: 'markers',
-            hoverinfo: 'none',
-            showlegend: true
-        }));
+    const fetchPlotData = async () => {
+      try {
+        const plotData = await getPlotData(bucket, plotKey);
+        setData(plotData);
+      } catch (err) {
+        console.error(`Error fetching plot data: ${err}`);
+      }
+    };
 
-        layout = {
-            xaxis: { title: 'Features', showgrid: false },
-            yaxis: { title: 'Identity', type: 'category'},
-            legend: { orientation: 'v', title: { text: 'Percent Expressed' } },
-            title: 'Dot Plot',
-            annotations: [
-                {
-                    text: 'Average Expression',
-                    xref: 'paper',
-                    yref: 'paper',
-                    x: 1.275,
-                    y: 0.5,
-                    showarrow: false,
-                    font: {
-                        size: 14,
-                        color: 'black'
-                    }
-                }
-            ],
-        };
-        return (<Plot className='w-full h-full' data={[trace, ...sizeLegendTraces]} layout={layout} />)
-    } else {
-        return(<div>Setting Dot Plot Data</div>)
+    if (plotKey && bucket) {
+      fetchPlotData();
     }
-}
+  }, [plotKey, bucket]);
+
+  useEffect(() => {
+    if (data) {
+      function processData(data) {
+        const clusters = new Set();
+        const genes = new Set();
+        const metrics = {};
+
+        Object.values(data).forEach((cell) => {
+          const cluster = cell.cluster;
+          clusters.add(cluster);
+
+          Object.keys(cell).forEach((key) => {
+            if (key !== "UMAP1" && key !== "UMAP2" && key !== "cluster") {
+              genes.add(key);
+
+              if (!metrics[cluster]) metrics[cluster] = {};
+              if (!metrics[cluster][key]) {
+                metrics[cluster][key] = {
+                  totalCells: 0,
+                  expressedCells: 0,
+                  totalExpression: 0,
+                };
+              }
+
+              const value = parseFloat(cell[key]) || 0;
+              metrics[cluster][key].totalCells += 1;
+              if (value > 0) {
+                metrics[cluster][key].expressedCells += 1;
+                metrics[cluster][key].totalExpression += value;
+              }
+            }
+          });
+        });
+
+        return {
+          clusters: Array.from(clusters).map(Number).sort((a, b) => a - b),
+          genes: Array.from(genes).sort(),
+          metrics,
+        };
+      }
+
+      function createMatrix(metrics, clusters, genes) {
+        const matrix = [];
+        clusters.forEach((cluster, xIndex) => {
+          genes.forEach((gene, yIndex) => {
+            const clusterMetrics = metrics[cluster] && metrics[cluster][gene];
+            if (clusterMetrics) {
+              const percentExpressed =
+                (clusterMetrics.expressedCells / clusterMetrics.totalCells) * 100;
+              const avgExpression =
+                clusterMetrics.expressedCells > 0
+                  ? clusterMetrics.totalExpression /
+                    clusterMetrics.expressedCells
+                  : 0;
+
+              matrix.push({
+                x: xIndex,
+                y: yIndex,
+                z: percentExpressed,
+                value: avgExpression,
+              });
+            }
+          });
+        });
+        return matrix;
+      }
+
+      try {
+        const { clusters, genes, metrics } = processData(data);
+        const matrix = createMatrix(metrics, clusters, genes);
+
+        setChartOptions({
+          chart: {
+            type: "bubble",
+            plotBorderWidth: 1,
+            zooming: { type: "xy" },
+          },
+          colorAxis: {
+            min: 0,
+            max: 3,
+            stops: [
+              [0, "#FFFFFF"],
+              [0.5, "#007AFF"],
+              [1, "#00008B"],
+            ],
+            title: { text: "Avg Expression" },
+          },
+          title: { text: "Single-cell RNAseq Gene Expression" },
+          xAxis: {
+            title: { text: "Cluster" },
+            categories: clusters.map((cluster) => `Cluster ${cluster}`),
+            gridLineWidth: 1,
+          },
+          yAxis: {
+            title: { text: "Gene Name" },
+            categories: genes,
+            startOnTick: false,
+            endOnTick: false,
+            gridLineWidth: 1,
+          },
+          tooltip: {
+            headerFormat: "<b>{series.name}</b><br>",
+            pointFormat:
+              "Cluster: {point.xCategory}<br>Gene: {point.yCategory}<br>% Expressed: {point.z}%<br>Avg Expression: {point.value}",
+          },
+          series: [
+            {
+              name: "Gene Expression",
+              colorKey: "value",
+              data: matrix,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Error processing data:", error);
+      }
+    }
+  }, [data]);
+
+  return (
+    <>
+      {chartOptions ? (
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+      ) : (
+        <div>Setting Dot Plot Data...</div>
+      )}
+    </>
+  );
+};
+
 export default DotPlot;

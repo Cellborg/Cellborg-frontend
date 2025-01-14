@@ -323,7 +323,10 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 
                 for (const dataset of selectedDatasets) {//find species for all new datasets
                     for (const file of Array.from(dataset)) {
-                        if(file.name=="features.tsv.gz"){
+                        console.log('CHECKING SPECIES HERE')
+                        console.log(file.name);
+                        console.log(file.name.endsWith('features.tsv.gz'))
+                        if(file.name.endsWith('features.tsv.gz')){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
                             const spec = await findSpecies(file)
                             if(spec){
@@ -360,7 +363,7 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 //newProject.datasets an array of objects - find the correct dataset
                 for (const dataset of selectedDatasets) {
                     for (const file of Array.from(dataset)) {
-                        if(file.name=="features.tsv.gz"){
+                        if(file.name.endsWith('features.tsv.gz')){
                             const folderName = dataset[1].webkitRelativePath.split('/')[0];
                             const spec = await findSpecies(file)
                             if(spec){
@@ -471,17 +474,27 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                         )}
 
                      <div className="bottom-0 flex justify-start mt-5">
-                        <button className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' onClick={handleEdit}>Edit</button>
-                        
-                        <button 
-                            className={`border px-2 py-1 m-2 rounded-md ${qcCompleted() ? 'hover:bg-cyan' : 'bg-gray-400 cursor-not-allowed'}`} 
-                            onClick={handlePARun} 
-                            disabled={!qcCompleted()}
-                        >
-                            Run Processing and Annotations
-                        </button>
-                        <button className='border px-2 py-1 m-2 bg-red-400 rounded-md hover:bg-red-400/50' onClick={saveDeleted}>Delete Project</button>
-                    </div>
+    <button className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' onClick={handleEdit}>Edit</button>
+    
+    {selectedProject.status !== 'PAcomplete' ? (
+        <button 
+            className={`border px-2 py-1 m-2 rounded-md ${qcCompleted() ? 'hover:bg-cyan' : 'bg-gray-400 cursor-not-allowed'}`} 
+            onClick={handlePARun} 
+            disabled={!qcCompleted()}
+        >
+            Run Processing and Annotations
+        </button>
+    ) : (
+        <button 
+            className='border px-2 py-1 m-2 rounded-md hover:bg-cyan' 
+            disabled={!qcCompleted()}
+        >
+            Run Analysis
+        </button>
+    )}
+    
+    <button className='border px-2 py-1 m-2 bg-red-400 rounded-md hover:bg-red-400/50' onClick={saveDeleted}>Delete Project</button>
+</div>
 
                     <div className='mt-5 font-bold text-blue'> Runs:</div>
                         {selectedProject.runs && selectedProject.runs.length > 0 ? (
