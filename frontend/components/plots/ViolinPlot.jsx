@@ -174,11 +174,6 @@ const ViolinPlot = ({ plotData, datamap, div_id}) => {
     }));
     cursor.lineX.set("visible", false);
     
-    // add scrollbar
-    chart.set("scrollbarY", am5.Scrollbar.new(root, {
-      orientation: "vertical"
-    }));
-    
     // Make stuff animate on load
     // https://www.amcharts.com/docs/v5/concepts/animations/
     chart.appear(100, 1000);

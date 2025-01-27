@@ -4,7 +4,7 @@ import { get, set} from 'idb-keyval';
 const ProjectContext = createContext();
 
 const getInitialState = async (key, defaultValue) => {
-  if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
+  if (typeof window !== 'undefined') {
     const context = await get(key);
     if (context !== undefined) {
       try {
@@ -41,7 +41,7 @@ export const ProjectProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const selectedProjectData = await getInitialState('selectedProject', {});
+      const selectedProjectData = await getInitialState('selectedProject', null);
       setSelectedProject(selectedProjectData);
 
       const user = await getInitialState('user', "");

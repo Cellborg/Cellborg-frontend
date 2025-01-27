@@ -39,7 +39,7 @@ export const analysisCleanUpURL=`${API_URL}/api/analysis/analysisCleanUp`;
 
 //pages/api/auth/
 export const LOGIN_URL = `${API_URL}/api/auth/login`;
-
+export const GOOGLE_LOGIN_URL = `${API_URL}/api/auth/google`;
 //pages/PCA.jsx
 export const pcaBucket = (ENVVV === "dev") ? "cellborgpcabucket" : `cellborg-${ENVIRONMENT}-pca-bucket`;
 export const performPCAURL=`${API_URL}/api/analysis/performPCA`;

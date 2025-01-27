@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import { useProjectContext } from '../components/utils/projectContext';
 import PagesNavbar from '../components/PagesNavbar';
 import { deleteProjectFromS3 } from '../components/utils/s3client.mjs';
@@ -15,7 +15,7 @@ import BugReportForm from '../components/BugReportForm';
 const Dashboard = ({data: session, token}) => {
     const userId=session.user.user_id
 
-    const { setProjects,projects, setSelectedProject, setUser, setUserData } = useProjectContext();
+    const { setProjects,projects, setSelectedProject, setUser, setUserData} = useProjectContext();
     const [editMode, setEditMode] = useState(false);
     const [deleteMode,setDeleteMode]=useState(false);
     const [deletedProject,setDeletedProject]=useState({});

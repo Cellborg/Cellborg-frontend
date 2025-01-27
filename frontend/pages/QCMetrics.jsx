@@ -58,15 +58,15 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
     console.log('gene: ', gene.current)
     console.log('mito: ', mito.current)
     //check if user chose max and min for count
-    if(Object.keys(currCount).length <2){
+    if(currCount.max===null || currCount.min === null){
       return false;
     }
     //check if user chose max and min for gene
-    else if(Object.keys(currGene).length <2){
+    if(currGene.min === null || currGene.max === null){
       return false
     }
     //check if user chose max and min for mito
-    else if(Object.keys(currMito).length <2){
+    if(currMito.min === null || currMito.max === null){
       return false
     }
     //check for negative values
@@ -143,9 +143,9 @@ const QCMetrics = ({data: session, token, datasetName,datasetId, completed}) => 
         :<div className='w-full h-full p-5'>
           {/* <PlotCarousel plots={plots}/> */}
           <div className='flex items-center'>
-            <DynamicViolinPlot plotData={jsonData} datamap={'pct_counts_mt'} div_id={'pct_counts_mt'} className='w-auto'/>
             <DynamicViolinPlot plotData={jsonData} datamap={'total_counts'} div_id={'total_counts'} className='w-auto'/>
             <DynamicViolinPlot plotData={jsonData} datamap={'n_genes'} div_id={'n_genes'} className='w-auto'/>
+            <DynamicViolinPlot plotData={jsonData} datamap={'pct_counts_mt'} div_id={'pct_counts_mt'} className='w-auto'/>
           </div>
             <div className = 'flex items-center'>
               <h1>Count Max</h1>

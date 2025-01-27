@@ -48,6 +48,18 @@ const Login = () => {
         })
     };
 
+    const handleGoogleSignIn = async () => {
+      setIsDataLoading(true);
+
+      set('cachedProjects', [])
+      set('selectedProject', null)
+
+      signIn('google', {
+        callbackUrl: '/dashboard',
+        redirect: false,
+      })
+    };
+
     return (
         <div className="bg-slate-100 min-h-screen">         
             <div className="ripple-background">
@@ -108,6 +120,13 @@ const Login = () => {
                     <button className="w-full py-3 mt-8 bg-blue hover:bg-blue/80 relative text-white" type="submit">
                       Sign In
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleGoogleSignIn()}
+                      className="bg-red-600 text-white p-2 mt-4 w-full"
+                    >
+                      Sign in with Google
+                    </button>
                     <div className='justify-between flex mt-5'>
                       <Link className='text-black opacity-50 hover:text-blue hover:opacity-100' href='/SignUp'>Don&apos;t have an account?</Link>
                       <Link className='text-black opacity-50 hover:text-blue hover:opacity-100' href='/ForgotPassword'>Forgot Password?</Link>
@@ -147,6 +166,13 @@ const Login = () => {
                       </div>
                       <button className="w-full py-3 mt-8 bg-blue hover:bg-blue/80 relative text-white" type="submit">
                         Sign In
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleGoogleSignIn()}
+                        className="bg-red-600 text-white p-2 mt-4 w-full"
+                      >
+                        Sign in with Google
                       </button>
                       <div className='justify-between flex mt-5'>
                           <Link className='text-black opacity-50 hover:text-blue hover:opacity-100' href='/SignUp'>Don&apos;t have an account?</Link>

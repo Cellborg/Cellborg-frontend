@@ -1,11 +1,14 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { LOGIN_URL } from "../../../constants";
-export default NextAuth ({
-   session: {
+import GoogleProvider from "next-auth/providers/google";
+import { LOGIN_URL, GOOGLE_LOGIN_URL } from "../../../constants";
+
+export default NextAuth({
+  session: {
     strategy: "jwt",
-    maxAge: 20 * 60 //20 minutes
-  }, 
+    maxAge: 5 * 60 * 60, // 5 hours
+    updateAge: 2 * 60 * 60, // 2 hours
+  },
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -26,25 +29,57 @@ export default NextAuth ({
         }
         return Promise.reject(new Error(user?.errors));
       }
+    }),
+    GoogleProvider({
+      clientId: '1038975993001-95g7rrnusvjvu71r4ng7mleh2lecfp1t.apps.googleusercontent.com',
+      clientSecret: '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'
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
-      return user
-    },
-    async jwt({ token,user, account, profile }) {
-      // Persist the OAuth access_token and or the user id to the token right after signin
-      if (account) {
-        token.user_id = user.user_id
+    async signIn({ user, account, profile }) {
+      if (account.provider === 'google') {
+        try {
+          const response = await fetch(GOOGLE_LOGIN_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: profile.email,
+              name: profile.name,
+              googleId: profile.sub
+            })
+          });
+          
+          const data = await response.json();
+          if (response.ok) {
+            console.log('Google auth response:', data);
+            user.user_id = data.user_id; // Store the user_id from your API
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Error during Google auth:', error);
+          return false;
+        }
       }
-      return token
+      return true;
     },
-    async session({ session, token, user }) {
-      // Send properties to the client, like an access_token and user id from a provider.
-      session.user.user_id = token.user_id
-      
-      return session
-    } 
+
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        token.user_id = user.user_id;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (token) {
+        session.user.user_id = token.user_id;
+      }
+      console.log("Session callback:", session);
+      return session;
+    }
   },
   pages:{
     signIn:'../../Login',

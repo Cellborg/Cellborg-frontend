@@ -223,8 +223,16 @@ export const ProjectViewBox = ({ editMode, setEditMode,setDeleteMode, setDeleted
                 dataset_id=project.datasets[dataset].dataset_id
             }
         }
-        const fileName = file.name;
+        let fileName;
+        if(file.name.endsWith('barcodes.tsv.gz')){
+            fileName = 'barcodes.tsv.gz';
+        }else if(file.name.endsWith('features.tsv.gz')){
+            fileName = 'features.tsv.gz';
+        }else if(file.name.endsWith('matrix.mtx.gz')){
+            fileName = 'matrix.mtx.gz';
+        }
         console.log(fileName)
+
         console.log('EXAMPLE KEY:', `${user}/${projectId}/${dataset_id}/${fileName}`)
         const key = `${user}/${projectId}/${dataset_id}/${fileName}`;
         console.log("Key:", key);
